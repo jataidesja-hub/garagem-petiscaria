@@ -180,14 +180,34 @@ function buscarItensComanda(idComanda) {
   const data = sh.getDataRange().getValues();
   let itens = [];
   
-  // Buscar itens em aberto
   if (idComanda && data.length > 1) {
-    itens = data.filter(r => String(r[0]) === String(idComanda)).map(r => ({
-      codigo: String(r[1]), nome: String(r[2]), qtd: Number(r[3]), preco: Number(r[4]), total: Number(r[5]), categoria: String(r[8] || '')
-    }));
+    // Pegamos todos os itens da comanda
+    const rawItens = data.slice(1).filter(r => String(r[0]) === String(idComanda));
+    
+    // Mapeamos e AGRUPAMOS para o garçom ver a soma (ex: 3x Cerveja)
+    let agrupados = {};
+    rawItens.forEach(r => {
+      let cod = String(r[1]);
+      let cat = String(r[8] || '');
+      // Se for pagamento ou vier da aba vendas, tratamos com chave única (ou mantemos como está)
+      let chave = (cat === 'PAGAMENTO' || cat === 'Venda') ? (cod + Math.random()) : cod;
+      
+      if (!agrupados[chave]) {
+        agrupados[chave] = {
+          codigo: cod,
+          nome: String(r[2]),
+          qtd: 0,
+          preco: Number(r[4]),
+          total: 0,
+          categoria: cat
+        };
+      }
+      agrupados[chave].qtd += Number(r[3]);
+      agrupados[chave].total += Number(r[5]);
+    });
+    itens = Object.values(agrupados);
   }
 
-  // Se não achar nada (comanda pode estar fechada), buscar em Vendas
   if (idComanda && itens.length === 0) {
     const shV = getOrCreateSheet(ABA_VENDAS);
     const dataV = shV.getDataRange().getValues();
@@ -217,24 +237,24 @@ function adicionarItemComanda(idComanda, cod) {
   if(!produto) return {sucesso: false, erro: "Produto não encontrado"};
   
   const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-  const itensData = shItens.getDataRange().getValues();
-  let encontrou = false;
+  let cat = String(produto[9] || 'Bebidas');
   
-  for (let i = 1; i < itensData.length; i++) {
-    if (String(itensData[i][0]) === String(idComanda) && String(itensData[i][1]) === String(cod)) {
-      let novaQtd = Number(itensData[i][3]) + 1;
-      shItens.getRange(i + 1, 4).setValue(novaQtd);
-      shItens.getRange(i + 1, 6).setValue(novaQtd * Number(itensData[i][4]));
-      // GARANTIR QUE CATEGORIA E STATUS ESTEJAM ATUALIZADOS
-      shItens.getRange(i + 1, 9).setValue(String(produto[9] || 'Bebida'));
-      shItens.getRange(i + 1, 10).setValue('PENDENTE');
-      encontrou = true; break;
-    }
-  }
-  if (!encontrou) {
-    let cat = String(produto[9] || 'Bebidas');
-    shItens.appendRow([idComanda, produto[0], produto[1], 1, produto[5], produto[5], 0, '', cat, 'PENDENTE', new Date()]);
-  }
+  // SEMPRE adiciona uma nova linha com Qtd 1.
+  // Assim, a cozinha recebe pedidos individuais separados.
+  shItens.appendRow([
+    idComanda, 
+    produto[0], 
+    produto[1], 
+    1, 
+    produto[5], 
+    produto[5], 
+    0, 
+    '', 
+    cat, 
+    'PENDENTE', 
+    new Date()
+  ]);
+
   processarBaixaUnica(cod, 1);
   return {sucesso: true};
 }
