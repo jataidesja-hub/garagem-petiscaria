@@ -1,0 +1,21 @@
+{
+  "name": "A Garagem - Petiscaria",
+  "short_name": "A Garagem",
+  "description": "Sistema de Gestão para Petiscarias e Distribuidoras",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#050508",
+  "theme_color": "#D4AF37",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/761/761767.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/761/761767.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
