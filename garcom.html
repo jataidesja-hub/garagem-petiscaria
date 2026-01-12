@@ -463,7 +463,14 @@
 
     <div id="toast-container"></div>
 
-    <header>🍻 A GARAGEM PETISCARIA</header>
+    <header style="display:flex; justify-content:space-between; align-items:center;">
+        <span>🍻 A GARAGEM PETISCARIA</span>
+        <button onclick="carregarComandas(); carregarProdutos();"
+            style="background:none; border:none; color:var(--primary); font-size:1.2rem; cursor:pointer;"
+            title="Sincronizar">
+            <i class="fas fa-sync-alt" id="sync-icon"></i>
+        </button>
+    </header>
     <div class="container">
         <div
             style="display:flex; justify-content: space-around; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 50px; margin-bottom: 1.5rem; border: 1px solid var(--glass);">
@@ -671,6 +678,17 @@
 
         window.onload = function () {
             iniciarApp();
+            // Sincronização automática a cada 15 segundos
+            setInterval(() => {
+                // Só sincroniza se não houver modal crítico aberto ou se a busca não estiver ativa
+                if (document.getElementById('modalPagamento').style.display !== 'flex' &&
+                    document.getElementById('modalNova').style.display !== 'flex' &&
+                    document.getElementById('wrapper-search').style.display !== 'block') {
+
+                    carregarComandas(true); // true = sem mostrar loader
+                    console.log("Sincronização automática em segundo plano...");
+                }
+            }, 15000);
         };
 
         function iniciarApp() {
@@ -727,8 +745,14 @@
             carregarComandas();
         }
 
-        function carregarComandas() {
+        function carregarComandas(isBackground = false) {
+            const syncIcon = document.getElementById('sync-icon');
+            if (syncIcon) syncIcon.classList.add('fa-spin');
+
             google.script.run.withSuccessHandler(lista => {
+                if (syncIcon) syncIcon.classList.remove('fa-spin');
+                if (!Array.isArray(lista)) return;
+
                 document.getElementById('lista-comandas').innerHTML = lista.filter(c => c.status === statusTabAtiva).map(c => `
                 <div class="comanda-card" onclick="abrirDetalhes('${c.id}', '${c.nome}', '${c.status}')">
                     <b>${c.nome}</b><br>
@@ -736,6 +760,11 @@
                     <br><small style="font-size: 0.6rem; color: var(--text-muted)">${c.dataExibicao}</small>
                 </div>
             `).join('');
+
+                // Se o modal de detalhes estiver aberto e estivermos em background, atualiza os itens
+                if (isBackground && document.getElementById('modalDetalhes').style.display === 'flex') {
+                    atualizarItens(statusTabAtiva === 'FECHADA', true);
+                }
             }).listarTodasComandas();
         }
 
@@ -798,8 +827,10 @@
             atualizarItens(isFechada);
         }
 
-        function atualizarItens(isFechada = false) {
+        function atualizarItens(isFechada = false, isBackground = false) {
+            if (!idAtivo) return;
             google.script.run.withSuccessHandler(itens => {
+                if (!Array.isArray(itens)) return;
                 totalAtual = 0; consumoTotal = 0; itensSessao = itens;
                 let produtos = itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
                 let pagamentos = itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
@@ -810,9 +841,16 @@
                     return `<tr>
                         <td><b>${i.nome}</b><br><small>${i.qtd}x R$ ${i.preco.toFixed(2)}</small></td>
                         <td align="right">
-                            <div style="display:flex; align-items:center; gap:10px; justify-content:flex-end">
-                                <span>R$ ${i.total.toFixed(2)}</span>
-                                ${!isFechada ? `<button class="btn-del" onclick="removerItem('${i.codigo}')">➖</button>` : ''}
+                            <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end">
+                                <span style="margin-right:8px">R$ ${i.total.toFixed(2)}</span>
+                                ${!isFechada ? `
+                                    <div style="display:flex; gap:2px">
+                                        <button class="btn-del" onclick="removerItem('${i.codigo}')${isBackground ? ', true' : ''}" 
+                                                style="padding: 2px 8px; font-size: 0.7rem; background:rgba(255,0,0,0.1)">➖</button>
+                                        <button class="btn-del" onclick="adicionarMais('${i.codigo}')${isBackground ? ', true' : ''}" 
+                                                style="padding: 2px 8px; font-size: 0.7rem; background:rgba(0,255,0,0.1); color:var(--success); border-color:var(--success)">➕</button>
+                                    </div>
+                                ` : ''}
                             </div>
                         </td>
                     </tr>`;
@@ -834,6 +872,16 @@
             }).buscarItensComanda(idAtivo);
         }
 
+        function adicionarMais(cod, isBackground = false) {
+            if (!isBackground) mostrarCarregando("Adicionando...");
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) {
+                    if (!isBackground) mostrarFinalizado("Adicionado!", () => atualizarItens());
+                    else atualizarItens(false, true);
+                } else showToast("Erro: " + res.erro, "error");
+            }).adicionarItemComanda(idAtivo, String(cod));
+        }
+
         function reimprimirCupom() {
             let dados = {
                 id: idAtivo,
@@ -845,11 +893,13 @@
             prepararCupom(dados);
         }
 
-        function removerItem(cod) {
-            mostrarCarregando("Removendo...");
+        function removerItem(cod, isBackground = false) {
+            if (!isBackground) mostrarCarregando("Removendo...");
             google.script.run.withSuccessHandler(res => {
-                if (res.sucesso) mostrarFinalizado("Removido!", () => atualizarItens());
-                else showToast("Erro: " + res.erro, "error");
+                if (res.sucesso) {
+                    if (!isBackground) mostrarFinalizado("Removido!", () => atualizarItens());
+                    else atualizarItens(false, true);
+                } else showToast("Erro: " + res.erro, "error");
             }).removerItemComanda(idAtivo, String(cod));
         }
 
