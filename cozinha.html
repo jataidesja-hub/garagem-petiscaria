@@ -273,6 +273,80 @@
         .login-box button:active {
             transform: scale(0.98);
         }
+
+        /* --- PWA INSTALL PROMPT --- */
+        #pwa-install-banner {
+            position: fixed;
+            bottom: 2rem;
+            left: 5%;
+            right: 5%;
+            background: linear-gradient(135deg, #1a1a24, #111);
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            padding: 1.5rem;
+            display: none;
+            align-items: center;
+            gap: 1.5rem;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .pwa-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            background: rgba(165, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .pwa-text {
+            flex: 1;
+        }
+
+        .pwa-text h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .pwa-text p {
+            margin: 5px 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .btn-install {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .btn-close-pwa {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+        }
     </style>
 </head>
 
@@ -282,6 +356,17 @@
         <span><i class="fab fa-whatsapp"></i> (87) 9 8143-6052</span>
     </div>
 
+
+    <div id="pwa-install-banner">
+        <div class="pwa-icon"><i class="fas fa-utensils"></i></div>
+        <div class="pwa-text">
+            <h4>Instalar Cozinha</h4>
+            <p id="pwa-desc">Adicione à tela de início.</p>
+        </div>
+        <button id="btn-pwa-install" class="btn-install">INSTALAR</button>
+        <button class="btn-close-pwa"
+            onclick="document.getElementById('pwa-install-banner').style.display='none'">✕</button>
+    </div>
 
     <header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;">
         <div style="flex: 1;"></div>
@@ -424,6 +509,37 @@
             navigator.serviceWorker.register('<?= ScriptApp.getService().getUrl() ?>?page=sw')
                 .then(reg => console.log('SW registrado', reg))
                 .catch(err => console.log('Erro SW', err));
+        }
+        // LÓGICA PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.style.display = 'flex';
+        });
+
+        const installBtn = document.getElementById('btn-pwa-install');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt = null;
+                } else {
+                    alert("No iPhone/iPad:\n1. Toque em Compartilhar\n2. 'Adicionar à Tela de Início'");
+                }
+            });
+        }
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+        if (isIOS && !isStandalone) {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) {
+                banner.style.display = 'flex';
+                document.getElementById('pwa-desc').innerText = "Toque em compartilhar e 'Adicionar à Tela de Início'";
+                document.getElementById('btn-pwa-install').innerText = "COMO?";
+            }
         }
     </script>
 </body>
