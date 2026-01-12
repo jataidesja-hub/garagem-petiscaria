@@ -375,11 +375,18 @@
         <div
             style="flex: 1; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
             <div id="loader" style="font-size: 0.8rem; color: var(--accent); display: none;">Atualizando...</div>
+            <button id="btn-sound-toggle" onclick="toggleSound()"
+                style="background: var(--glass); border: 1px solid var(--accent); color: var(--accent); padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: 700;">
+                <i class="fas fa-volume-mute" id="sound-icon"></i> SOM
+            </button>
             <button onclick="carregarPedidos()"
                 style="background: var(--glass); border: 1px solid var(--accent); color: var(--accent); padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: 700;">🔄
                 RECARREGAR</button>
         </div>
     </header>
+
+    <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+        preload="auto"></audio>
 
     <div class="container">
         <div id="order-list" class="order-grid">
@@ -405,10 +412,29 @@
             window.google = { script: { run: ProxyFactory() } };
         })();
 
+        let soundEnabled = false;
+        let lastOrderCount = 0;
+
         window.onload = function () {
             carregarPedidos();
             setInterval(carregarPedidos, 10000);
         };
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            const btn = document.getElementById('btn-sound-toggle');
+
+            if (soundEnabled) {
+                icon.className = 'fas fa-volume-up';
+                btn.style.background = 'rgba(0, 230, 118, 0.2)';
+                // Play a tiny silent/short sound to unlock audio on mobile/browsers
+                document.getElementById('notif-sound').play().catch(e => console.log("Áudio aguardando interação..."));
+            } else {
+                icon.className = 'fas fa-volume-mute';
+                btn.style.background = 'var(--glass)';
+            }
+        }
 
         function carregarPedidos() {
             const loader = document.getElementById('loader');
@@ -429,6 +455,17 @@
                     clearTimeout(fetchTimeout);
                     console.log('Resposta recebida! Itens:', pedidos ? pedidos.length : 0);
                     loader.style.display = 'none';
+
+                    if (pedidos && Array.isArray(pedidos)) {
+                        const pendingCount = pedidos.filter(p => p.status === 'PENDENTE').length;
+
+                        // Se o número de pedidos pendentes aumentou, toca o som
+                        if (soundEnabled && pendingCount > lastOrderCount) {
+                            document.getElementById('notif-sound').play().catch(e => console.log("Erro ao tocar áudio:", e));
+                        }
+                        lastOrderCount = pendingCount;
+                    }
+
                     renderizarPedidos(pedidos);
                 })
                 .withFailureHandler(err => {
