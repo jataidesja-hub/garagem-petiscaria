@@ -46,6 +46,24 @@ function doGet(e) {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
 }
 
+// NOVA FUNÇÃO PARA ACEITAR CONEXÃO DA VERCEL
+function doPost(e) {
+  const request = JSON.parse(e.postData.contents);
+  const functionName = request.function;
+  const args = request.args || [];
+  
+  // Chama a função dinamicamente
+  let result;
+  try {
+    result = this[functionName].apply(this, args);
+  } catch (err) {
+    result = { sucesso: false, erro: err.toString() };
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 function verificarSenha(senha, papel) {
   let senhaCorreta = "";
   if (papel === 'admin') senhaCorreta = SENHA_ADMIN;
@@ -565,4 +583,8 @@ function marcarPedidoPronto(idComanda, codProduto) {
     }
   }
   return { sucesso: false, erro: "Item não encontrado" };
+}
+
+function getScriptUrl() {
+  return ScriptApp.getService().getUrl();
 }

@@ -303,6 +303,31 @@
     </div>
 
     <script>
+        // CONFIGURAÇÃO VERCEL -> GOOGLE
+        const URL_GAS = "https://script.google.com/macros/s/AKfycbxVE9BlJSDHvn-zDPsSE0Ko4CZa_zY8SUThJdF4Ao_5U0pSIpd1qp-JALqc13VwhOVgUQ/exec";
+
+        if (typeof google === 'undefined' || !google.script) {
+            window.google = {
+                script: {
+                    run: {
+                        withSuccessHandler: function (c) { this.c = c; return this; },
+                        withFailureHandler: function (f) { this.f = f; return this; }
+                    }
+                }
+            };
+            const runProxy = new Proxy(window.google.script.run, {
+                get: function (t, p) {
+                    if (['withSuccessHandler', 'withFailureHandler', 'c', 'f'].includes(p)) return t[p];
+                    return function (...a) {
+                        fetch(URL_GAS, { method: 'POST', body: JSON.stringify({ function: p, args: a }), redirect: 'follow' })
+                            .then(r => r.json()).then(res => { if (t.c) t.c(res); })
+                            .catch(err => { if (t.f) t.f(err); console.error(err); });
+                    };
+                }
+            });
+            window.google.script.run = runProxy;
+        }
+
         window.onload = function () {
             carregarPedidos();
             setInterval(carregarPedidos, 10000);

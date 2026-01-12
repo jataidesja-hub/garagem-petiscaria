@@ -928,6 +928,50 @@
     </div>
 
     <script>
+        // CONFIGURAÇÃO VERCEL -> GOOGLE
+        // COLE SEU LINK DO GOOGLE SCRIPT AQUI PARA FUNCIONAR NA VERCEL:
+        const URL_GAS = "https://script.google.com/macros/s/AKfycbxVE9BlJSDHvn-zDPsSE0Ko4CZa_zY8SUThJdF4Ao_5U0pSIpd1qp-JALqc13VwhOVgUQ/exec"; // EX: https://script.google.com/macros/s/.../exec
+
+        // PONTE ESTRUTURAL (NÃO MEXER)
+        if (typeof google === 'undefined' || !google.script) {
+            console.log("Ambiente Externo Detectado (Vercel). Ativando ponte de conexão...");
+            window.google = {
+                script: {
+                    run: {
+                        withSuccessHandler: function (callback) {
+                            this.callback = callback;
+                            return this;
+                        },
+                        withFailureHandler: function (fail) {
+                            this.fail = fail;
+                            return this;
+                        },
+                        // Proxy para capturar qualquer chamada de função
+                    }
+                }
+            };
+
+            // Criar proxy para capturar as funções do Code.gs
+            const runProxy = new Proxy(window.google.script.run, {
+                get: function (target, prop) {
+                    if (prop === 'withSuccessHandler' || prop === 'withFailureHandler' || prop === 'callback' || prop === 'fail') {
+                        return target[prop];
+                    }
+                    return function (...args) {
+                        fetch(URL_GAS, {
+                            method: 'POST',
+                            body: JSON.stringify({ function: prop, args: args }),
+                            redirect: 'follow'
+                        })
+                            .then(r => r.json())
+                            .then(res => { if (target.callback) target.callback(res); })
+                            .catch(err => { if (target.fail) target.fail(err); console.error("Erro na Ponte GAS:", err); });
+                    };
+                }
+            });
+            window.google.script.run = runProxy;
+        }
+
         let estoqueCache = [], carrinhoVD = [], editingCode = null;
 
         function mostrarCarregando(t) {
@@ -1291,6 +1335,18 @@
 
 
         // Controle de Navegação do Portal
+        function irParaModulo(p) {
+            // Se estiver na Vercel, as páginas estão na mesma pasta
+            if (window.location.hostname !== 'script.google.com') {
+                window.location.href = p + ".html";
+            } else {
+                // Se estiver no Google, usa o parâmetro page
+                google.script.run.withSuccessHandler(url => {
+                    window.top.location.href = url + "?page=" + p;
+                }).getScriptUrl();
+            }
+        }
+
         function irParaLogin() {
             document.getElementById('view-portal').style.display = 'none';
             document.getElementById('login-overlay').style.display = 'flex';
@@ -1304,34 +1360,45 @@
             document.getElementById('view-portal').style.display = 'flex';
         }
 
-        function irParaModulo(p) {
-            // Pegar URL base (retirando o ?page= se existir)
-            let url = window.location.href.split('?')[0];
-            window.location.href = url + "?page=" + p;
-        }
-
         function tentarLogin() {
             const pass = document.getElementById('login-pass').value;
             const btn = document.querySelector('.login-box button');
             const err = document.getElementById('login-err');
+
             if (!pass) return;
+
+            // Verificar se o ambiente do Google está disponível
+            if (typeof google === 'undefined' || !google.script) {
+                alert("AVISO: O sistema não detectou o ambiente do Google Apps Script. Se você está testando localmente ou na Vercel, a senha não poderá ser validada. Use o link oficial do Google Script (Execução).");
+                btn.innerHTML = 'ENTRAR';
+                btn.disabled = false;
+                return;
+            }
+
             btn.innerHTML = 'VALIDANDO...';
             btn.disabled = true;
             err.style.display = 'none';
 
-            google.script.run.withSuccessHandler(res => {
-                if (res.sucesso) {
-                    sessionStorage.setItem('auth_admin', 'true');
-                    document.getElementById('login-overlay').style.display = 'none';
-                    document.getElementById('view-admin').style.display = 'block';
-                    carregarTudo();
-                } else {
+            google.script.run
+                .withSuccessHandler(res => {
+                    if (res.sucesso) {
+                        sessionStorage.setItem('auth_admin', 'true');
+                        document.getElementById('login-overlay').style.display = 'none';
+                        document.getElementById('view-admin').style.display = 'block';
+                        carregarTudo();
+                    } else {
+                        btn.innerHTML = 'ENTRAR';
+                        btn.disabled = false;
+                        err.style.display = 'block';
+                        document.getElementById('login-pass').value = '';
+                    }
+                })
+                .withFailureHandler(e => {
                     btn.innerHTML = 'ENTRAR';
                     btn.disabled = false;
-                    err.style.display = 'block';
-                    document.getElementById('login-pass').value = '';
-                }
-            }).verificarSenha(pass, 'admin');
+                    alert("Erro no servidor: " + e.message);
+                })
+                .verificarSenha(pass, 'admin');
         }
 
         window.onload = () => {
