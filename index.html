@@ -930,7 +930,7 @@
     <script>
         // CONFIGURAÇÃO VERCEL -> GOOGLE
         // COLE SEU LINK DO GOOGLE SCRIPT AQUI PARA FUNCIONAR NA VERCEL:
-        const URL_GAS = "https://script.google.com/macros/s/AKfycbxVE9BlJSDHvn-zDPsSE0Ko4CZa_zY8SUThJdF4Ao_5U0pSIpd1qp-JALqc13VwhOVgUQ/exec"; // EX: https://script.google.com/macros/s/.../exec
+        const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec"; // EX: https://script.google.com/macros/s/.../exec
 
         // PONTE ESTRUTURAL (NÃO MEXER)
         if (typeof google === 'undefined' || !google.script) {
@@ -960,6 +960,7 @@
                     return function (...args) {
                         fetch(URL_GAS, {
                             method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             body: JSON.stringify({ function: prop, args: args }),
                             redirect: 'follow'
                         })

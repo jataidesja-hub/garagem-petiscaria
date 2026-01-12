@@ -649,7 +649,7 @@
 
     <script>
         // CONFIGURAÇÃO VERCEL -> GOOGLE
-        const URL_GAS = "https://script.google.com/macros/s/AKfycbxVE9BlJSDHvn-zDPsSE0Ko4CZa_zY8SUThJdF4Ao_5U0pSIpd1qp-JALqc13VwhOVgUQ/exec";
+        const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
 
         if (typeof google === 'undefined' || !google.script) {
             window.google = {
@@ -664,7 +664,12 @@
                 get: function (t, p) {
                     if (['withSuccessHandler', 'withFailureHandler', 'c', 'f'].includes(p)) return t[p];
                     return function (...a) {
-                        fetch(URL_GAS, { method: 'POST', body: JSON.stringify({ function: p, args: a }), redirect: 'follow' })
+                        fetch(URL_GAS, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({ function: p, args: a }),
+                            redirect: 'follow'
+                        })
                             .then(r => r.json()).then(res => { if (t.c) t.c(res); })
                             .catch(err => { if (t.f) t.f(err); console.error(err); });
                     };
