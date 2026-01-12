@@ -651,32 +651,19 @@
         // CONFIGURAÇÃO VERCEL -> GOOGLE
         const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
 
-        if (typeof google === 'undefined' || !google.script) {
-            window.google = {
-                script: {
-                    run: {
-                        withSuccessHandler: function (c) { this.c = c; return this; },
-                        withFailureHandler: function (f) { this.f = f; return this; }
-                    }
-                }
-            };
-            const runProxy = new Proxy(window.google.script.run, {
-                get: function (t, p) {
-                    if (['withSuccessHandler', 'withFailureHandler', 'c', 'f'].includes(p)) return t[p];
-                    return function (...a) {
-                        fetch(URL_GAS, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify({ function: p, args: a }),
-                            redirect: 'follow'
-                        })
-                            .then(r => r.json()).then(res => { if (t.c) t.c(res); })
-                            .catch(err => { if (t.f) t.f(err); console.error(err); });
-                    };
-                }
-            });
-            window.google.script.run = runProxy;
-        }
+        (function () {
+            if (typeof google !== 'undefined' && google.script) return;
+            const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
+            function callGas(f, a, s, fl) {
+                fetch(URL_GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ function: f, args: a }) })
+                    .then(r => r.json()).then(res => { if (res && res.sucesso === false && fl) fl({ message: res.erro }); else if (s) s(res); })
+                    .catch(err => { if (fl) fl(err); console.error(err); });
+            }
+            function ProxyFactory(s, fl) {
+                return new Proxy({}, { get: (t, p) => { if (p === 'withSuccessHandler') return (cb) => ProxyFactory(cb, fl); if (p === 'withFailureHandler') return (fb) => ProxyFactory(s, fb); return (...args) => callGas(p, args, s, fl); } });
+            }
+            window.google = { script: { run: ProxyFactory() } };
+        })();
 
         let idAtivo = null, totalAtual = 0, consumoTotal = 0, estoqueCache = [], itensSessao = [];
         let modoPagamento = 'TOTAL';

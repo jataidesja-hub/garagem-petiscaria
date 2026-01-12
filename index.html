@@ -932,46 +932,33 @@
         // COLE SEU LINK DO GOOGLE SCRIPT AQUI PARA FUNCIONAR NA VERCEL:
         const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec"; // EX: https://script.google.com/macros/s/.../exec
 
-        // PONTE ESTRUTURAL (NÃO MEXER)
-        if (typeof google === 'undefined' || !google.script) {
-            console.log("Ambiente Externo Detectado (Vercel). Ativando ponte de conexão...");
-            window.google = {
-                script: {
-                    run: {
-                        withSuccessHandler: function (callback) {
-                            this.callback = callback;
-                            return this;
-                        },
-                        withFailureHandler: function (fail) {
-                            this.fail = fail;
-                            return this;
-                        },
-                        // Proxy para capturar qualquer chamada de função
+        (function () {
+            if (typeof google !== 'undefined' && google.script) return;
+            const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
+            function callGas(f, a, s, fl) {
+                fetch(URL_GAS, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ function: f, args: a })
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.sucesso === false && fl) fl({ message: res.erro });
+                        else if (s) s(res);
+                    })
+                    .catch(err => { if (fl) fl(err); console.error("GAS Bridge Error:", err); });
+            }
+            function ProxyFactory(s, fl) {
+                return new Proxy({}, {
+                    get: (t, p) => {
+                        if (p === 'withSuccessHandler') return (cb) => ProxyFactory(cb, fl);
+                        if (p === 'withFailureHandler') return (fb) => ProxyFactory(s, fb);
+                        return (...args) => callGas(p, args, s, fl);
                     }
-                }
-            };
-
-            // Criar proxy para capturar as funções do Code.gs
-            const runProxy = new Proxy(window.google.script.run, {
-                get: function (target, prop) {
-                    if (prop === 'withSuccessHandler' || prop === 'withFailureHandler' || prop === 'callback' || prop === 'fail') {
-                        return target[prop];
-                    }
-                    return function (...args) {
-                        fetch(URL_GAS, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify({ function: prop, args: args }),
-                            redirect: 'follow'
-                        })
-                            .then(r => r.json())
-                            .then(res => { if (target.callback) target.callback(res); })
-                            .catch(err => { if (target.fail) target.fail(err); console.error("Erro na Ponte GAS:", err); });
-                    };
-                }
-            });
-            window.google.script.run = runProxy;
-        }
+                });
+            }
+            window.google = { script: { run: ProxyFactory() } };
+        })();
 
         let estoqueCache = [], carrinhoVD = [], editingCode = null;
 
@@ -1008,7 +995,7 @@
         let notificacoesVistas = new Set();
         function checarNotificacoes() {
             google.script.run.withSuccessHandler(lista => {
-                if (!lista) return;
+                if (!Array.isArray(lista)) return;
                 lista.forEach(n => {
                     let chave = n.idComanda + n.nome + n.qtd;
                     if (!notificacoesVistas.has(chave)) {
@@ -1032,6 +1019,7 @@
             const fim = document.getElementById('dash-fim').value;
 
             google.script.run.withSuccessHandler(lista => {
+                if (!Array.isArray(lista)) return;
                 let html = "";
                 lista.forEach(c => {
                     let match = true;

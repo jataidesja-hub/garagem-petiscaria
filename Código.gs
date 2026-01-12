@@ -48,13 +48,16 @@ function doGet(e) {
 
 // NOVA FUNÇÃO PARA ACEITAR CONEXÃO DA VERCEL
 function doPost(e) {
-  const request = JSON.parse(e.postData.contents);
-  const functionName = request.function;
-  const args = request.args || [];
-  
-  // Chama a função dinamicamente
   let result;
   try {
+    const request = JSON.parse(e.postData.contents);
+    const functionName = request.function;
+    const args = request.args || [];
+    
+    if (typeof this[functionName] !== 'function') {
+      throw new Error("Função '" + functionName + "' não encontrada no Código.gs");
+    }
+    
     result = this[functionName].apply(this, args);
   } catch (err) {
     result = { sucesso: false, erro: err.toString() };
