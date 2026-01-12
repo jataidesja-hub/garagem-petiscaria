@@ -514,6 +514,19 @@
     </div>
     <div id="toast-container" class="toast-container"></div>
 
+    <!-- Overlay de Login -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>Painel Administrativo</h2>
+            <p style="color: #888; margin-bottom: 20px;">Digite a senha de administrador.</p>
+            <input type="password" id="login-pass" placeholder="••••" maxlength="10">
+            <button onclick="tentarLogin()">ACESSAR PAINEL</button>
+            <p id="login-err" style="color: #ff4444; font-size: 0.8rem; margin-top: 15px; display: none;">Senha
+                incorreta.</p>
+        </div>
+    </div>
+
     <div id="loader" class="loader-overlay">
         <div class="spinner"></div>
         <p id="loader-text" style="margin-top:15px; font-weight:600;"></p>
@@ -1078,8 +1091,41 @@
 
 
 
+        function tentarLogin() {
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.querySelector('.login-box button');
+            const err = document.getElementById('login-err');
+            if (!pass) return;
+            btn.innerHTML = 'VALIDANDO...';
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) {
+                    sessionStorage.setItem('auth_admin', 'true');
+                    document.getElementById('login-overlay').style.transition = '0.5s';
+                    document.getElementById('login-overlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('login-overlay').style.display = 'none';
+                        carregarTudo();
+                    }, 500);
+                } else {
+                    btn.innerHTML = 'ACESSAR PAINEL';
+                    btn.disabled = false;
+                    err.style.display = 'block';
+                    document.getElementById('login-pass').value = '';
+                }
+            }).verificarSenha(pass, 'admin');
+        }
+
         window.onload = () => {
-            carregarTudo();
+            if (sessionStorage.getItem('auth_admin') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                carregarTudo();
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('login-pass').focus();
+            }
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('<?= ScriptApp.getService().getUrl() ?>?page=sw')

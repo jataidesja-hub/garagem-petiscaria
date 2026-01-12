@@ -281,6 +281,18 @@
         <span><i class="fas fa-code"></i> Developed by: <b>J.A SOFTWARE & SOLUTION</b></span>
         <span><i class="fab fa-whatsapp"></i> (87) 9 8143-6052</span>
     </div>
+    <!-- Overlay de Login -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <i class="fas fa-utensils" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>Acesso Cozinha</h2>
+            <p style="color: #888; margin-bottom: 20px;">Digite a senha para ver os pedidos.</p>
+            <input type="password" id="login-pass" placeholder="••••" maxlength="10">
+            <button onclick="tentarLogin()">ENTRAR NO PAINEL</button>
+            <p id="login-err" style="color: #ff4444; font-size: 0.8rem; margin-top: 15px; display: none;">Senha
+                incorreta.</p>
+        </div>
+    </div>
 
     <header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;">
         <div style="flex: 1;"></div>
@@ -303,10 +315,43 @@
 
     <script>
         window.onload = function () {
-            carregarPedidos();
-            // Polling de 10s para cozinha também
-            setInterval(carregarPedidos, 10000);
+            if (sessionStorage.getItem('auth_cozinha') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                carregarPedidos();
+                setInterval(carregarPedidos, 10000);
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('login-pass').focus();
+            }
         };
+
+        function tentarLogin() {
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.querySelector('.login-box button');
+            const err = document.getElementById('login-err');
+            if (!pass) return;
+            btn.innerHTML = 'VALIDANDO...';
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) {
+                    sessionStorage.setItem('auth_cozinha', 'true');
+                    document.getElementById('login-overlay').style.transition = '0.5s';
+                    document.getElementById('login-overlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('login-overlay').style.display = 'none';
+                        carregarPedidos();
+                        setInterval(carregarPedidos, 10000);
+                    }, 500);
+                } else {
+                    btn.innerHTML = 'ENTRAR NO PAINEL';
+                    btn.disabled = false;
+                    err.style.display = 'block';
+                    document.getElementById('login-pass').value = '';
+                }
+            }).verificarSenha(pass, 'cozinha');
+        }
 
         function carregarPedidos() {
             const loader = document.getElementById('loader');
