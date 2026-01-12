@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>A GARAGEM - Pedidos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="manifest" href="<?= ScriptApp.getService().getUrl() ?>?page=manifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="A Garagem">
+    <style>
+        :root {
+            --primary: #D4AF37;
+            /* Gold/Amber */
+            --danger: #FF4D4D;
+            --dark: #0A0A0A;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass: rgba(255, 255, 255, 0.1);
+            --text: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --bg: #050508;
+            --success: #28a745;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, #1a1505 0%, #050508 100%);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .top-bar {
+            background: #09090c;
+            color: #666;
+            font-size: 0.65rem;
+            padding: 5px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1a1a24;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 101;
+        }
+
+        .top-bar b {
+            color: var(--primary);
+        }
+
+        header {
+            background: rgba(13, 13, 18, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            border-bottom: 1px solid var(--glass);
+            position: sticky;
+            top: 25px;
+            z-index: 100;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .container {
+            padding: 1.5rem;
+        }
+
+        .comanda-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1.2rem;
+            margin-top: 1.2rem;
+        }
+
+        .comanda-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass);
+            padding: 2.5rem 1rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .comanda-card:active {
+            transform: scale(0.95);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .btn-ready:active {
+            transform: scale(0.95);
+        }
+
+        .cat-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .cat-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+        }
+
+        .cat-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            scrollbar-width: none;
+        }
+
+        .cat-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--glass);
+            color: white;
+        }
+
+        .btn-danger {
+            background: rgba(255, 77, 77, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-sheet {
+            background: #12121c;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            border-radius: 0;
+            padding: 2.5rem 1.5rem;
+            max-height: 100vh;
+            overflow-y: auto;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        @media (min-width: 600px) {
+            .modal-sheet {
+                width: 95%;
+                max-width: 500px;
+                height: auto;
+                max-height: 90vh;
+                border-radius: 30px;
+                border: 2px solid var(--primary);
+                margin: auto;
+                position: relative;
+            }
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .toast {
+            border-radius: 15px;
+            padding: 1rem;
+            color: white;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 1rem;
+            margin: 0.4rem 0 0.8rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass);
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
+            font-size: 1.1rem;
+        }
+
+        select option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        #prod-list-dropdown {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1a1a2e;
+            border-radius: 15px;
+            z-index: 2100;
+            display: none;
+            border: 1px solid var(--glass);
+        }
+
+        .prod-option {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 12px;
+            border-bottom: 1px solid var(--glass);
+        }
+
+        .prod-option div b {
+            font-size: 1.4rem;
+        }
+
+        .prod-option div small {
+            font-size: 1.1rem;
+        }
+
+        .prod-option img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 12px 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 1rem;
+        }
+
+        .btn-del {
+            background: rgba(255, 77, 77, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .check-item {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            accent-color: var(--primary);
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- LOGIN OVERLAY --- */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0d0d12;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-box {
+            background: #1a1a24;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+        }
+
+        .login-box h2 {
+            margin-bottom: 30px;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #252533;
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            font-size: 20px;
+            letter-spacing: 5px;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), #b8860b);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .login-box button:active {
+            transform: scale(0.98);
+        }
+
+        /* Estilo de Impressão */
+        @media print {
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+
+            body {
+                background: white;
+                color: black;
+                margin: 0;
+                padding: 0;
+            }
+
+            body * {
+                display: none !important;
+            }
+
+            #cupom-print,
+            #cupom-print * {
+                display: block !important;
+            }
+
+            #cupom-print {
+                position: relative;
+                width: 72mm;
+                /* Deixa margens nas laterais da bobina de 80mm */
+                margin: 0 auto;
+                padding: 10px 5px;
+                color: black !important;
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 12px;
+                line-height: 1.2;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar no-print">
+        <span><i class="fas fa-code"></i> Developed by: <b>J.A SOFTWARE & SOLUTION</b></span>
+        <span><i class="fab fa-whatsapp"></i> (87) 9 8143-6052</span>
+    </div>
+
+    <!-- Overlay de Login -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <i class="fas fa-user-tie" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>Acesso Garçom</h2>
+            <p style="color: #888; margin-bottom: 20px;">Digite a senha para iniciar o atendimento.</p>
+            <input type="password" id="login-pass" placeholder="••••" maxlength="10">
+            <button onclick="tentarLogin()">ENTRAR NO APP</button>
+            <p id="login-err" style="color: #ff4444; font-size: 0.8rem; margin-top: 15px; display: none;">Senha
+                incorreta. Tente novamente.</p>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <header>🍻 A GARAGEM PETISCARIA</header>
+    <div class="container">
+        <div
+            style="display:flex; justify-content: space-around; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 50px; margin-bottom: 1.5rem; border: 1px solid var(--glass);">
+            <button id="tab-abertas" class="cat-btn active" style="flex:1"
+                onclick="switchMainTab('ABERTA')">ABERTAS</button>
+            <button id="tab-fechadas" class="cat-btn" style="flex:1"
+                onclick="switchMainTab('FECHADA')">FECHADAS</button>
+        </div>
+        <button id="btn-nova-mesa" class="btn btn-primary" onclick="abrirModalNova()">➕ ABRIR NOVA MESA</button>
+        <div id="lista-comandas" class="comanda-grid"></div>
+    </div>
+
+    <!-- Loader Centralizado -->
+    <div id="loader" class="overlay" style="z-index: 9000;">
+        <div style="text-align: center; width: 100%;">
+            <div id="loader-spinner"
+                style="border: 6px solid var(--glass); border-top: 6px solid var(--primary); border-radius: 50%; width: 80px; height: 80px; animation: spin 1s linear infinite; margin: 0 auto;">
+            </div>
+            <div id="loader-success-icon" style="display:none; color: var(--primary); font-size: 80px;">✓</div>
+            <p id="loader-text"
+                style="font-weight:700; margin-top:2rem; text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem;">
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes -->
+    <div id="modalDetalhes" class="overlay">
+        <div class="modal-sheet">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+                <h2 id="view-nome" style="margin:0">Mesa</h2>
+                <button onclick="fecharModais()"
+                    style="background:none; border:none; color:white; font-size:1.8rem; padding: 5px;">✕</button>
+            </div>
+            <div class="search-container no-print">
+                <div id="area-categorias" class="cat-container">
+                    <button class="cat-btn active" onclick="filtrarPorCategoria('Tudo', this)">Tudo</button>
+                    <button class="cat-btn" onclick="filtrarPorCategoria('Refeições', this)">Refeições</button>
+                    <button class="cat-btn" onclick="filtrarPorCategoria('Petiscos', this)">Petiscos</button>
+                    <button class="cat-btn" onclick="filtrarPorCategoria('Bebidas', this)">Bebidas</button>
+                    <button class="cat-btn" onclick="filtrarPorCategoria('Cervejas', this)">Cervejas</button>
+                    <button class="cat-btn" onclick="filtrarPorCategoria('Bebidas Quentes', this)">Quentes</button>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-outline"
+                        onclick="toggleDropdown(true); document.getElementById('search-prod').focus();"
+                        style="flex:1; padding: 1.2rem; font-size: 1.2rem;">🔍 BUSCAR</button>
+                    <button id="btn-fechar-busca" class="btn btn-danger" onclick="toggleDropdown(false)"
+                        style="display:none; flex:1; padding: 1.2rem; font-size: 1.2rem;">✖ FECHAR</button>
+                </div>
+                <div id="wrapper-search" style="display:none; margin-top: 10px;">
+                    <input type="text" id="search-prod" placeholder="Digite para filtrar..."
+                        oninput="filtrarProdutos(this.value)" style="margin-bottom:0">
+                </div>
+                <div id="prod-list-dropdown"></div>
+            </div>
+            <div style="max-height: 40vh; overflow-y: auto;">
+                <table id="tabela-itens"></table>
+            </div>
+            <div
+                style="display:flex; justify-content: space-between; border-top: 1px solid var(--glass); padding-top: 1rem; margin-top: 1rem;">
+                <span style="color: var(--text-muted);">Saldo Aberto:</span>
+                <h2 id="view-total" style="color:var(--primary)">R$ 0,00</h2>
+            </div>
+            <div id="acoes-mesa" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1.5rem;">
+                <button id="btn-pagar" class="btn btn-primary" onclick="abrirPagamento()">💸 PAGAR</button>
+                <button id="btn-reimprimir" class="btn btn-outline" style="display:none" onclick="reimprimirCupom()">🖨️
+                    CUPOM</button>
+                <button class="btn btn-outline" onclick="fecharModais()">SAIR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pagamento -->
+    <div id="modalPagamento" class="overlay" style="z-index: 2500;">
+        <div class="modal-sheet">
+            <h3 style="text-align:center; margin-bottom: 1.5rem;">💰 Recebimento</h3>
+            <div
+                style="display:flex; gap: 4px; background: var(--glass); padding: 4px; border-radius: 12px; margin-bottom: 1.2rem;">
+                <button id="btn-pago-total" class="btn" style="padding: 10px; font-size: 0.75rem;"
+                    onclick="setModoPagamento('TOTAL')">TOTAL</button>
+                <button id="btn-pago-parcial" class="btn" style="padding: 10px; font-size: 0.75rem;"
+                    onclick="setModoPagamento('ITENS')">ITENS</button>
+                <button id="btn-pago-abatimento" class="btn" style="padding: 10px; font-size: 0.75rem;"
+                    onclick="setModoPagamento('ABATIMENTO')">VALOR</button>
+            </div>
+
+            <div id="area-selecao-itens"
+                style="display:none; max-height: 25vh; overflow-y: auto; border: 1px solid var(--glass); border-radius: 15px; margin-bottom: 1rem; padding: 15px;">
+                <div id="lista-check-itens"></div>
+            </div>
+
+            <div id="area-valor-avulso" style="display:none; text-align: center; margin-bottom: 1rem;">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px;">Digite o valor a descontar
+                    da conta:</p>
+                <input type="number" id="input-valor-avulso" step="0.01"
+                    style="font-size: 1.8rem; text-align: center; font-weight: 700; color: var(--primary);"
+                    oninput="recalcAvulso()">
+            </div>
+
+            <select id="pag-metodo" onchange="ajustarCampos()">
+                <option value="Dinheiro">💵 Dinheiro</option>
+                <option value="Pix">📱 Pix</option>
+                <option value="Débito">💳 Cartão Débito</option>
+                <option value="Crédito">💳 Cartão Crédito</option>
+            </select>
+
+            <div
+                style="margin-top:10px; padding:15px; background:rgba(255,255,255,0.03); border-radius: 20px; border: 1px solid var(--glass);">
+                <div style="display:flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span id="label-valor" style="color: var(--text-muted);">Total a Pagar:</span>
+                    <b id="pag-total-l" style="font-size: 1.1rem;">R$ 0.00</b>
+                </div>
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Recebido:</label>
+                <input type="number" id="pag-valor" step="0.01" style="font-size: 1.4rem; text-align: center;"
+                    oninput="calcTroco()">
+                <div
+                    style="display:flex; justify-content: space-between; color:var(--danger); font-weight: 700; margin-top: 10px; border-top:1px solid var(--glass); padding-top:10px;">
+                    <span>Troco:</span><span id="pag-troco">R$ 0.00</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="finalizarFinal()">FINALIZAR</button>
+            <button class="btn btn-outline" style="margin-top: 8px; border:none;"
+                onclick="document.getElementById('modalPagamento').style.display='none'">VOLTAR</button>
+        </div>
+    </div>
+
+    <!-- Modal Nova Mesa -->
+    <div id="modalNova" class="overlay">
+        <div class="modal-sheet" style="text-align:center">
+            <h3>🏷️ Abrir Nova Mesa</h3>
+            <input type="text" id="new-mesa" placeholder="Nome ou Número" style="text-align:center">
+            <button class="btn btn-primary" onclick="confirmarNova()">ABRIR AGORA</button>
+            <button class="btn btn-outline" style="margin-top:10px; border:none"
+                onclick="fecharModais()">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- Modal Confirmação / Impressão -->
+    <div id="modalConfirm" class="overlay" style="z-index: 3000;">
+        <div class="modal-sheet" style="text-align: center; border: 1px solid var(--primary);">
+            <h3 id="confirm-title">Confirmar</h3>
+            <p id="confirm-msg" style="margin: 1.2rem 0; color: var(--text-muted);"></p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn btn-primary" id="confirm-yes">SIM</button>
+                <button class="btn btn-danger" onclick="closeConfirm()">NÃO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTRUTURA PARA IMPRESSÃO -->
+    <div id="cupom-print" style="display:none; font-family: 'Courier New', Courier, monospace; line-height: 1.2;">
+        <div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 10px;">
+            <h2 style="margin:0; text-transform: uppercase;">A GARAGEM</h2>
+            <p style="margin:2px 0; font-size: 0.8rem;">PETISCARIA & CERVEJARIA</p>
+            <p style="margin:5px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0;">RECIBO
+                DE PAGAMENTO</p>
+            <p style="font-size: 1.1rem; margin: 10px 0;"><b>MESA: <span id="cupom-mesa"></span></b></p>
+            <p style="font-size: 0.8rem;" id="cupom-data-hora"></p>
+        </div>
+        <table style="width:100%; border-bottom: 1px dashed #000; margin: 10px 0; font-size: 0.9rem;">
+            <thead>
+                <tr>
+                    <th align="left">ITEM</th>
+                    <th align="right">VALOR</th>
+                </tr>
+            </thead>
+            <tbody id="cupom-itens"></tbody>
+        </table>
+        <div style="text-align: right; padding-top: 5px;">
+            <p style="font-size: 1.1rem;"><b>TOTAL: <span id="cupom-total"></span></b></p>
+            <p style="font-size: 0.9rem;">FORMA: <span id="cupom-forma"></span></p>
+        </div>
+        <div style="text-align:center; margin-top: 40px; border-top: 1px solid #000; padding-top: 10px;">
+            <p style="font-size: 0.8rem;">BOHEMIA PURO MALTE</p>
+            <p style="font-size: 0.7rem; margin-top: 5px;">Obrigado pela preferência!</p>
+            <div style="margin-top: 15px; border-top: 1px dotted #000; padding-top: 5px; font-size: 8px; opacity: 0.8;">
+                Developed by: J.A Software & Solution<br>
+                (87) 9 8143-6052
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let idAtivo = null, totalAtual = 0, consumoTotal = 0, estoqueCache = [], itensSessao = [];
+        let modoPagamento = 'TOTAL';
+        let statusTabAtiva = 'ABERTA';
+
+        window.onload = function () {
+            // Verificar Sessão
+            if (sessionStorage.getItem('auth_garcom') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                iniciarApp();
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('login-pass').focus();
+            }
+        };
+
+        function tentarLogin() {
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.querySelector('.login-box button');
+            const err = document.getElementById('login-err');
+
+            if (!pass) return;
+
+            btn.innerHTML = 'VALIDANDO...';
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) {
+                    sessionStorage.setItem('auth_garcom', 'true');
+                    document.getElementById('login-overlay').style.transition = '0.5s';
+                    document.getElementById('login-overlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('login-overlay').style.display = 'none';
+                        iniciarApp();
+                    }, 500);
+                } else {
+                    btn.innerHTML = 'ENTRAR NO APP';
+                    btn.disabled = false;
+                    err.style.display = 'block';
+                    document.getElementById('login-pass').value = '';
+                }
+            }).verificarSenha(pass, 'garcom');
+        }
+
+        function iniciarApp() {
+            carregarComandas();
+            carregarProdutos();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('<?= ScriptApp.getService().getUrl() ?>?page=sw')
+                    .then(reg => console.log('SW registrado', reg))
+                    .catch(err => console.log('Erro SW', err));
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const cont = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
+            t.innerHTML = (type === 'success' ? '✅ ' : '❌ ') + msg;
+            cont.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        function userConfirm(title, msg, onYes) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-msg').innerText = msg;
+            document.getElementById('modalConfirm').style.display = 'flex';
+            document.getElementById('confirm-yes').onclick = () => { onYes(); closeConfirm(); };
+        }
+        function closeConfirm() { document.getElementById('modalConfirm').style.display = 'none'; }
+
+        function mostrarCarregando(t) {
+            document.getElementById('loader-spinner').style.display = 'block';
+            document.getElementById('loader-success-icon').style.display = 'none';
+            document.getElementById('loader').style.display = 'flex';
+            document.getElementById('loader-text').innerText = t;
+        }
+
+        function mostrarFinalizado(t, callback) {
+            document.getElementById('loader-spinner').style.display = 'none';
+            document.getElementById('loader-success-icon').style.display = 'block';
+            document.getElementById('loader-text').innerText = t;
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+                if (callback) callback();
+            }, 1300);
+        }
+
+        function fecharModais() { document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none'); carregarComandas(); }
+
+        function switchMainTab(status) {
+            statusTabAtiva = status;
+            document.getElementById('tab-abertas').classList.toggle('active', status === 'ABERTA');
+            document.getElementById('tab-fechadas').classList.toggle('active', status === 'FECHADA');
+            document.getElementById('btn-nova-mesa').style.display = status === 'ABERTA' ? 'flex' : 'none';
+            carregarComandas();
+        }
+
+        function carregarComandas() {
+            google.script.run.withSuccessHandler(lista => {
+                document.getElementById('lista-comandas').innerHTML = lista.filter(c => c.status === statusTabAtiva).map(c => `
+                <div class="comanda-card" onclick="abrirDetalhes('${c.id}', '${c.nome}', '${c.status}')">
+                    <b>${c.nome}</b><br>
+                    <span style="color:var(--primary); font-weight:700">R$ ${c.total.toFixed(2)}</span>
+                    <br><small style="font-size: 0.6rem; color: var(--text-muted)">${c.dataExibicao}</small>
+                </div>
+            `).join('');
+            }).listarTodasComandas();
+        }
+
+        function carregarProdutos() { google.script.run.withSuccessHandler(d => { estoqueCache = d; renderDrop(d); }).listarEstoque(); }
+        function renderDrop(lista) {
+            document.getElementById('prod-list-dropdown').innerHTML = lista.map(p => `
+            <div class="prod-option" onclick="selecionarProduto('${p.codigo}')">
+                <img src="${p.imagem}">
+                <div><b style="color:white">${p.nome}</b><br><small style="color:var(--primary)">R$ ${p.preco.toFixed(2)}</small></div>
+            </div>`).join('');
+        }
+        function filtrarProdutos(v) { let f = estoqueCache.filter(p => p.nome.toLowerCase().includes(v.toLowerCase())); renderDrop(f); }
+        function toggleDropdown(s) {
+            document.getElementById('prod-list-dropdown').style.display = s ? 'block' : 'none';
+            document.getElementById('wrapper-search').style.display = s ? 'block' : 'none';
+            document.getElementById('btn-fechar-busca').style.display = s ? 'flex' : 'none';
+            if (!s) {
+                document.getElementById('search-prod').value = '';
+                renderDrop(estoqueCache);
+            }
+        }
+
+        function filtrarPorCategoria(cat, el) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            let f;
+            if (cat === 'Tudo') {
+                f = estoqueCache;
+            } else {
+                f = estoqueCache.filter(p => (p.categoria || 'Bebidas') === cat);
+            }
+            renderDrop(f);
+            toggleDropdown(true);
+        }
+
+        function selecionarProduto(cod) {
+            let p = estoqueCache.find(x => x.codigo === String(cod));
+            let nomeProd = p ? p.nome : "este item";
+
+            userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} à mesa?`, () => {
+                document.getElementById('search-prod').value = '';
+                mostrarCarregando("Adicionando...");
+                google.script.run.withSuccessHandler(() => { mostrarFinalizado("Adicionado!", () => atualizarItens()); }).adicionarItemComanda(idAtivo, String(cod));
+            });
+        }
+
+        function abrirDetalhes(id, nome, status = 'ABERTA') {
+            idAtivo = String(id); document.getElementById('view-nome').innerText = nome;
+            // Configurar botões baseado no status
+            const isFechada = status === 'FECHADA';
+            document.getElementById('btn-pagar').style.display = isFechada ? 'none' : 'flex';
+            document.getElementById('btn-reimprimir').style.display = isFechada ? 'flex' : 'none';
+            document.querySelector('.search-container').style.display = isFechada ? 'none' : 'block';
+            document.querySelectorAll('.btn-del').forEach(b => b.style.display = isFechada ? 'none' : 'block');
+
+            // Limpar tabela e total antes de abrir para não mostrar lixo de comanda anterior
+            document.getElementById('tabela-itens').innerHTML = '<tr><td colspan="2" align="center">Carregando itens...</td></tr>';
+            document.getElementById('view-total').innerText = 'R$ 0,00';
+            document.getElementById('modalDetalhes').style.display = 'flex';
+            atualizarItens(isFechada);
+        }
+
+        function atualizarItens(isFechada = false) {
+            google.script.run.withSuccessHandler(itens => {
+                totalAtual = 0; consumoTotal = 0; itensSessao = itens;
+                let produtos = itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
+                let pagamentos = itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
+
+                let html = produtos.map(i => {
+                    totalAtual += i.total;
+                    consumoTotal += i.total;
+                    return `<tr>
+                        <td><b>${i.nome}</b><br><small>${i.qtd}x R$ ${i.preco.toFixed(2)}</small></td>
+                        <td align="right">
+                            <div style="display:flex; align-items:center; gap:10px; justify-content:flex-end">
+                                <span>R$ ${i.total.toFixed(2)}</span>
+                                ${!isFechada ? `<button class="btn-del" onclick="removerItem('${i.codigo}')">➖</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+
+                if (pagamentos.length > 0) {
+                    html += `<tr><td colspan="2" style="padding-top:15px; border-bottom:1px solid var(--primary); color:var(--primary); font-size:0.8rem; font-weight:700">PAGAMENTOS JÁ REALIZADOS</td></tr>`;
+                    pagamentos.forEach(p => {
+                        totalAtual += p.total;
+                        html += `<tr style="color:var(--success)">
+                            <td><i class="fas fa-check-circle"></i> ${p.nome}</td>
+                            <td align="right">R$ ${p.total.toFixed(2)}</td>
+                        </tr>`;
+                    });
+                }
+
+                document.getElementById('tabela-itens').innerHTML = html || '<tr><td colspan="2" align="center">Vazio</td></tr>';
+                document.getElementById('view-total').innerText = 'Saldo Aberto: R$ ' + totalAtual.toFixed(2);
+            }).buscarItensComanda(idAtivo);
+        }
+
+        function reimprimirCupom() {
+            let dados = {
+                id: idAtivo,
+                total: totalAtual,
+                itens: itensSessao,
+                forma: "Reimpressão",
+                isAbatimento: false
+            };
+            prepararCupom(dados);
+        }
+
+        function removerItem(cod) {
+            mostrarCarregando("Removendo...");
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) mostrarFinalizado("Removido!", () => atualizarItens());
+                else showToast("Erro: " + res.erro, "error");
+            }).removerItemComanda(idAtivo, String(cod));
+        }
+
+        function setModoPagamento(m) {
+            modoPagamento = m;
+            document.getElementById('btn-pago-total').className = m === 'TOTAL' ? 'btn btn-primary' : 'btn';
+            document.getElementById('btn-pago-parcial').className = m === 'ITENS' ? 'btn btn-primary' : 'btn';
+            document.getElementById('btn-pago-abatimento').className = m === 'ABATIMENTO' ? 'btn btn-primary' : 'btn';
+            document.getElementById('area-selecao-itens').style.display = m === 'ITENS' ? 'block' : 'none';
+            document.getElementById('area-valor-avulso').style.display = m === 'ABATIMENTO' ? 'block' : 'none';
+            if (m === 'ITENS') {
+                document.getElementById('lista-check-itens').innerHTML = itensSessao.map(i => `
+              <div style="display:flex; align-items:center; margin-bottom: 12px;">
+                <input type="checkbox" class="check-item" value="${i.codigo}" data-preco="${i.preco}" data-qtd="${i.qtd}" onchange="recalcParcial()">
+                <span>${i.nome} (${i.qtd}x)</span>
+              </div>`).join('');
+            }
+            recalcParcial();
+        }
+
+        function recalcParcial() {
+            let valor = 0;
+            if (modoPagamento === 'TOTAL') { valor = totalAtual; }
+            else if (modoPagamento === 'ABATIMENTO') { valor = parseFloat(document.getElementById('input-valor-avulso').value) || 0; }
+            else {
+                document.querySelectorAll('.check-item:checked').forEach(ck => {
+                    valor += parseFloat(ck.getAttribute('data-preco')) * parseInt(ck.getAttribute('data-qtd'));
+                });
+            }
+            document.getElementById('pag-total-l').innerText = 'R$ ' + valor.toFixed(2);
+            document.getElementById('pag-valor').value = valor.toFixed(2);
+            calcTroco();
+        }
+
+        function recalcAvulso() {
+            document.getElementById('pag-total-l').innerText = 'R$ ' + (parseFloat(document.getElementById('input-valor-avulso').value) || 0).toFixed(2);
+            document.getElementById('pag-valor').value = document.getElementById('input-valor-avulso').value;
+            calcTroco();
+        }
+
+        function calcTroco() {
+            let t = parseFloat(document.getElementById('pag-total-l').innerText.replace('R$ ', ''));
+            let pago = parseFloat(document.getElementById('pag-valor').value) || 0;
+            document.getElementById('pag-troco').innerText = 'R$ ' + (pago > t ? (pago - t).toFixed(2) : '0.00');
+        }
+
+        function abrirPagamento() {
+            setModoPagamento('TOTAL');
+            document.getElementById('modalPagamento').style.display = 'flex';
+            document.getElementById('input-valor-avulso').value = '';
+            ajustarCampos();
+        }
+
+        function finalizarFinal() {
+            let valPagar = parseFloat(document.getElementById('pag-total-l').innerText.replace('R$ ', ''));
+            if (valPagar <= 0) return showToast("Valor inválido", "error");
+
+            let itensPagar = [];
+            if (modoPagamento === 'TOTAL') itensPagar = itensSessao;
+            else if (modoPagamento === 'ITENS') {
+                document.querySelectorAll('.check-item:checked').forEach(ck => {
+                    let it = itensSessao.find(x => x.codigo === ck.value);
+                    itensPagar.push(it);
+                });
+            }
+
+            let m = document.getElementById('pag-metodo').value;
+            let dados = {
+                id: idAtivo, tipo: 'COMANDA', total: valPagar, forma: m,
+                pago: parseFloat(document.getElementById('pag-valor').value) || 0,
+                troco: parseFloat(document.getElementById('pag-troco').innerText.replace('R$ ', '')),
+                itens: itensPagar,
+                isParcial: (modoPagamento === 'ITENS' || modoPagamento === 'ABATIMENTO'),
+                isAbatimento: (modoPagamento === 'ABATIMENTO')
+            };
+
+            mostrarCarregando("Finalizando...");
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) {
+                    mostrarFinalizado("Venda Concluída!", () => {
+                        prepararCupom(dados);
+                        fecharModais();
+                    });
+                } else { showToast("Erro: " + res.erro, "error"); }
+            }).finalizarVenda(dados);
+        }
+
+        function prepararCupom(dados) {
+            const mesa = document.getElementById('view-nome').innerText;
+            document.getElementById('cupom-mesa').innerText = mesa;
+            document.getElementById('cupom-data-hora').innerText = new Date().toLocaleString();
+
+            let produtos = dados.itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
+            let pagamentos = dados.itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
+
+            let totalConsumo = 0;
+            let htmlItens = produtos.map(i => {
+                let sub = i.preco * i.qtd;
+                totalConsumo += sub;
+                return `<tr><td>${i.nome} (${i.qtd}x)</td><td align="right">R$ ${sub.toFixed(2)}</td></tr>`;
+            }).join('');
+
+            if (pagamentos.length > 0) {
+                htmlItens += `<tr><td colspan="2" style="border-top:1px dashed #000; font-weight:bold; font-size:10px; padding-top:5px;">PAGAMENTOS ANTERIORES:</td></tr>`;
+                htmlItens += pagamentos.map(p => `<tr><td>${p.nome}</td><td align="right">R$ ${p.total.toFixed(2)}</td></tr>`).join('');
+            }
+
+            if (dados.isAbatimento) {
+                htmlItens += `<tr><td style="border-top:1px solid #000; font-weight:bold">NOVO PAGAMENTO:</td><td align="right" style="border-top:1px solid #000; font-weight:bold">R$ ${dados.total.toFixed(2)}</td></tr>`;
+            }
+
+            document.getElementById('cupom-itens').innerHTML = htmlItens;
+
+            // Se for fechamento total, o TOTAL do cupom deve ser o consumo total real
+            let totalExibir = dados.isParcial ? dados.total : totalConsumo;
+            document.getElementById('cupom-total').innerText = 'R$ ' + totalExibir.toFixed(2);
+            document.getElementById('cupom-forma').innerText = (pagamentos.length > 0 && !dados.isParcial) ? "Misto / Final: " + dados.forma : dados.forma;
+
+            userConfirm("Venda Concluída", "Deseja imprimir o cupom agora?", () => window.print());
+        }
+
+        function abrirModalNova() { document.getElementById('modalNova').style.display = 'flex'; document.getElementById('new-mesa').value = ''; }
+        function confirmarNova() {
+            let n = document.getElementById('new-mesa').value; if (!n) return showToast("Digite a mesa!", "error");
+            mostrarCarregando("Abrindo...");
+            google.script.run.withSuccessHandler(() => { mostrarFinalizado("Aberta!", () => fecharModais()); }).abrirNovaComanda(n);
+        }
+        function ajustarCampos() { recalcParcial(); }
+    </script>
+</body>
+
+</html>

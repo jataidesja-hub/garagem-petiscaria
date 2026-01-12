@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cozinha - A Garagem</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="<?= ScriptApp.getService().getUrl() ?>?page=manifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Cozinha Garagem">
+    <meta name="theme-color" content="#A50000">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #A50000;
+            /* Deep Red for Kitchen */
+            --accent: #D4AF37;
+            --dark: #0A0A0A;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass: rgba(255, 255, 255, 0.1);
+            --text: #FFFFFF;
+            --text-muted: #A0A0A0;
+            --bg: #050508;
+            --success: #00E676;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, #1a0505 0%, #050508 100%);
+        }
+
+        .top-bar {
+            background: #09090c;
+            color: #666;
+            font-size: 0.65rem;
+            padding: 5px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1a1a24;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 101;
+        }
+
+        .top-bar b {
+            color: var(--primary);
+        }
+
+        header {
+            background: rgba(13, 13, 18, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1rem 5%;
+            border-bottom: 1px solid var(--glass);
+            position: sticky;
+            top: 25px;
+            z-index: 100;
+        }
+
+        .container {
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .order-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .order-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass);
+            border-radius: 24px;
+            padding: 1.5rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass);
+            padding-bottom: 10px;
+        }
+
+        .mesa-badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .time-badge {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .item-qtd {
+            font-size: 1.1rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .obs {
+            background: rgba(212, 175, 55, 0.1);
+            border-left: 3px solid var(--accent);
+            padding: 10px;
+            font-size: 0.9rem;
+            color: #ffda79;
+            font-style: italic;
+        }
+
+        .btn-ready {
+            background: var(--success);
+            color: #000;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-ready:active {
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 5rem 2rem;
+            color: var(--text-muted);
+        }
+
+        #loader {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            display: none;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .order-card.ready {
+            opacity: 0.6;
+            border-color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.02);
+            order: 100;
+        }
+
+        .order-card.ready .mesa-badge {
+            background: #555;
+        }
+
+        .order-card.ready .btn-ready {
+            display: none;
+        }
+
+        .ready-badge {
+            background: var(--success);
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+
+        /* --- LOGIN OVERLAY --- */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0d0d12;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-box {
+            background: #1a1a24;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+        }
+
+        .login-box h2 {
+            margin-bottom: 30px;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #252533;
+            border: 1px solid #444;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            font-size: 20px;
+            letter-spacing: 5px;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary), #b8860b);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .login-box button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="top-bar no-print">
+        <span><i class="fas fa-code"></i> Developed by: <b>J.A SOFTWARE & SOLUTION</b></span>
+        <span><i class="fab fa-whatsapp"></i> (87) 9 8143-6052</span>
+    </div>
+    <!-- Overlay de Login -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <i class="fas fa-utensils" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>Acesso Cozinha</h2>
+            <p style="color: #888; margin-bottom: 20px;">Digite a senha para ver os pedidos.</p>
+            <input type="password" id="login-pass" placeholder="••••" maxlength="10">
+            <button onclick="tentarLogin()">ENTRAR NO PAINEL</button>
+            <p id="login-err" style="color: #ff4444; font-size: 0.8rem; margin-top: 15px; display: none;">Senha
+                incorreta.</p>
+        </div>
+    </div>
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;">
+        <div style="flex: 1;"></div>
+        <h1 style="color: var(--primary); letter-spacing: 1px; flex: 2; text-align: center; font-size: 1.2rem;">🍳
+            COZINHA - A GARAGEM</h1>
+        <div
+            style="flex: 1; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
+            <div id="loader" style="font-size: 0.8rem; color: var(--accent); display: none;">Atualizando...</div>
+            <button onclick="carregarPedidos()"
+                style="background: var(--glass); border: 1px solid var(--accent); color: var(--accent); padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: 700;">🔄
+                RECARREGAR</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="order-list" class="order-grid">
+            <div class="empty-state">Buscando pedidos...</div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            // Verificar Sessão
+            if (sessionStorage.getItem('auth_cozinha') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                carregarPedidos();
+                // Polling de 10s para cozinha também
+                setInterval(carregarPedidos, 10000);
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('login-pass').focus();
+            }
+        };
+
+        function tentarLogin() {
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.querySelector('.login-box button');
+            const err = document.getElementById('login-err');
+
+            if (!pass) return;
+
+            btn.innerHTML = 'VALIDANDO...';
+            btn.disabled = true;
+            err.style.display = 'none';
+
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) {
+                    sessionStorage.setItem('auth_cozinha', 'true');
+                    document.getElementById('login-overlay').style.transition = '0.5s';
+                    document.getElementById('login-overlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('login-overlay').style.display = 'none';
+                        carregarPedidos();
+                        setInterval(carregarPedidos, 10000);
+                    }, 500);
+                } else {
+                    btn.innerHTML = 'ENTRAR NO PAINEL';
+                    btn.disabled = false;
+                    err.style.display = 'block';
+                    document.getElementById('login-pass').value = '';
+                }
+            }).verificarSenha(pass, 'cozinha');
+        }
+
+        function carregarPedidos() {
+            const loader = document.getElementById('loader');
+            const list = document.getElementById('order-list');
+            loader.style.display = 'block';
+            console.log('--- Iniciando busca de pedidos ---');
+
+            // Timeout de segurança para aviso se demorar demais
+            const fetchTimeout = setTimeout(() => {
+                if (loader.style.display === 'block') {
+                    console.warn('Busca de pedidos está demorando...');
+                    list.innerHTML += '<div style="color:orange; text-align:center; padding:10px;"><small>⚠️ A busca está demorando. Verifique sua conexão ou clique em RECARREGAR.</small></div>';
+                }
+            }, 8000);
+
+            google.script.run
+                .withSuccessHandler(pedidos => {
+                    clearTimeout(fetchTimeout);
+                    console.log('Resposta recebida! Itens:', pedidos ? pedidos.length : 0);
+                    loader.style.display = 'none';
+                    renderizarPedidos(pedidos);
+                })
+                .withFailureHandler(err => {
+                    clearTimeout(fetchTimeout);
+                    console.error('ERRO CRÍTICO NO SERVIDOR:', err);
+                    loader.style.display = 'none';
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <h3>❌ Erro de Carregamento</h3>
+                            <p>O servidor não respondeu corretamente.</p>
+                            <div style="background:rgba(255,0,0,0.1); padding:15px; border-radius:10px; margin-top:10px; text-align:left;">
+                                <code style="color:#ff6b6b; font-size:0.8rem;">Erro: ${err.message}</code><br>
+                                <small style="color:var(--text-muted)">Dica: Certifique-se de que a coluna de data (Timestamp) não está vazia na planilha ComandaItens.</small>
+                            </div>
+                            <button onclick="carregarPedidos()" class="btn-ready" style="background:var(--primary); margin-top:20px;">TENTAR NOVAMENTE</button>
+                        </div>`;
+                })
+                .listarPedidosCozinha();
+        }
+
+        function renderizarPedidos(pedidos) {
+            const list = document.getElementById('order-list');
+            if (!pedidos || pedidos.length === 0) {
+                list.innerHTML = '<div class="empty-state"><h3>✅ Tudo pronto por aqui!</h3><p>Nenhum pedido pendente.</p></div>';
+                return;
+            }
+
+            list.innerHTML = pedidos.map(p => {
+                // Tratar timestamp vindo como Número (milissegundos)
+                const data = new Date(p.timestamp);
+                const hora = isNaN(data.getTime()) ? '--:--' : data.getHours().toString().padStart(2, '0') + ':' + data.getMinutes().toString().padStart(2, '0');
+                const isReady = p.status === 'PRONTO';
+
+                return `
+                <div class="order-card ${isReady ? 'ready' : ''}" id="card-${p.idComanda}-${p.codigo}">
+                    <div class="order-header">
+                        <div>
+                            <span class="mesa-badge">${p.mesa}</span>
+                            ${isReady ? '<span class="ready-badge">PRONTO</span>' : ''}
+                        </div>
+                        <span class="time-badge">🕒 ${hora}</span>
+                    </div>
+                    <div class="item-row">
+                        <span class="item-name">${p.nome}</span>
+                        <span class="item-qtd">${p.qtd}x</span>
+                    </div>
+                    ${p.obs ? `<div class="obs">📝 ${p.obs}</div>` : ''}
+                    <button class="btn-ready" onclick="marcarPronto('${p.idComanda}', '${p.codigo}')">MARCAR COMO PRONTO</button>
+                </div>`;
+            }).join('');
+        }
+
+        function marcarPronto(idComanda, cod) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = "Processando...";
+
+            google.script.run.withSuccessHandler(res => {
+                if (res.sucesso) {
+                    const card = document.getElementById(`card-${idComanda}-${cod}`);
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8)';
+                    setTimeout(() => carregarPedidos(), 300);
+                } else {
+                    alert("Erro ao atualizar: " + res.erro);
+                    btn.disabled = false;
+                    btn.innerText = "MARCAR COMO PRONTO";
+                }
+            }).marcarPedidoPronto(idComanda, cod);
+        }
+
+        // Atualizar automaticamente a cada 30 segundos
+        setInterval(carregarPedidos, 30000);
+        window.onload = carregarPedidos;
+
+        // Registro de Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('<?= ScriptApp.getService().getUrl() ?>?page=sw')
+                .then(reg => console.log('SW registrado', reg))
+                .catch(err => console.log('Erro SW', err));
+        }
+    </script>
+</body>
+
+</html>
