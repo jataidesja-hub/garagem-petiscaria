@@ -1,8 +1,8 @@
 {
-  "name": "A Garagem - Petiscaria",
-  "short_name": "A Garagem",
-  "description": "Sistema de Gestão para Petiscarias e Distribuidoras",
-  "start_url": "/index.html",
+  "name": "Garçom - A Garagem",
+  "short_name": "Garçom",
+  "description": "Lançamento de Pedidos - A Garagem",
+  "start_url": "/garcom.html",
   "display": "standalone",
   "background_color": "#050508",
   "theme_color": "#D4AF37",
