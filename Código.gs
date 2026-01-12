@@ -594,18 +594,15 @@ function getNotificacoesCozinha() {
     }));
 }
 
-function marcarPedidoPronto(idComanda, codProduto) {
+function marcarPedidoPronto(rowIndex) {
   const sh = getOrCreateSheet(ABA_COMANDA_ITENS);
-  const data = sh.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(idComanda) && String(data[i][1]) === String(codProduto)) {
-      // Coluna 10 (J) = StatusItem, Coluna 11 (K) = Timestamp
-      sh.getRange(i + 1, 10).setValue('PRONTO');
-      sh.getRange(i + 1, 11).setValue(new Date()); 
-      return { sucesso: true };
-    }
+  // Validamos se o rowIndex é válido e se a linha corresponde ao esperado
+  if (rowIndex > 1) {
+    sh.getRange(rowIndex, 10).setValue('PRONTO');
+    sh.getRange(rowIndex, 11).setValue(new Date()); 
+    return { sucesso: true };
   }
-  return { sucesso: false, erro: "Item não encontrado" };
+  return { sucesso: false, erro: "Item não encontrado ou índice inválido" };
 }
 
 function getScriptUrl() {
