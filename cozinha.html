@@ -563,23 +563,33 @@
             installBtn.addEventListener('click', async () => {
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        document.getElementById('pwa-install-banner').style.display = 'none';
+                    }
                     deferredPrompt = null;
                 } else {
-                    alert("No iPhone/iPad:\n1. Toque em Compartilhar\n2. 'Adicionar à Tela de Início'");
+                    alert("No iPhone/iPad:\n1. Toque em Compartilhar\n2. 'Adicionar à Tela de Início'\n\nNo Android:\nVá no menu (3 pontos) > 'Instalar aplicativo'");
                 }
             });
         }
 
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-        if (isIOS && !isStandalone) {
-            const banner = document.getElementById('pwa-install-banner');
-            if (banner) {
-                banner.style.display = 'flex';
-                document.getElementById('pwa-desc').innerText = "Toque em compartilhar e 'Adicionar à Tela de Início'";
-                document.getElementById('btn-pwa-install').innerText = "COMO?";
+
+        // Forçar exibição do banner após 2 segundos se não estiver instalado
+        setTimeout(() => {
+            if (!isStandalone) {
+                const banner = document.getElementById('pwa-install-banner');
+                if (banner) {
+                    banner.style.display = 'flex';
+                    if (isIOS) {
+                        document.getElementById('pwa-desc').innerText = "Toque em compartilhar e 'Adicionar à Tela de Início'";
+                        document.getElementById('btn-pwa-install').innerText = "COMO?";
+                    }
+                }
             }
-        }
+        }, 2000);
     </script>
 </body>
 
