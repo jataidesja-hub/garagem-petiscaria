@@ -983,7 +983,7 @@
         }
 
         function confirmarEdicaoNome() {
-            const novoNome = document.getElementById('edit-mesa-input').value;
+            const novoNome = document.getElementById('edit-mesa-input').value.trim();
             const nomeAntigo = document.getElementById('view-nome').innerText;
 
             if (!novoNome) return showToast("Digite um nome!", "error");
@@ -995,18 +995,25 @@
             mostrarCarregando("Atualizando dados...");
             google.script.run
                 .withSuccessHandler(res => {
-                    if (res.sucesso) {
+                    if (res && res.sucesso) {
+                        // Atualiza o nome na interface imediatamente
                         document.getElementById('view-nome').innerText = novoNome;
+
+                        // Fecha os modais de edição e detalhes
                         document.getElementById('modalEditNome').style.display = 'none';
-                        mostrarFinalizado("Nome atualizado!", () => carregarComandas());
+
+                        mostrarFinalizado("Nome atualizado!", () => {
+                            carregarComandas(); // Recarrega a lista do fundo
+                        });
                     } else {
                         document.getElementById('loader').style.display = 'none';
-                        showToast("Erro: " + res.erro, "error");
+                        showToast("Erro: " + (res ? res.erro : "Resposta inválida"), "error");
                     }
                 })
                 .withFailureHandler(err => {
                     document.getElementById('loader').style.display = 'none';
                     showToast("Erro de conexão", "error");
+                    console.error(err);
                 })
                 .alterarNomeMesa(idAtivo, novoNome);
         }
