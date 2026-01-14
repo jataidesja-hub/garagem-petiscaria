@@ -605,6 +605,21 @@ function marcarPedidoPronto(rowIndex) {
   return { sucesso: false, erro: "Item não encontrado ou índice inválido" };
 }
 
+
+function alterarNomeMesa(idComanda, novoNome) {
+  if (!idComanda || !novoNome) return { sucesso: false, erro: "Dados incompletos" };
+  const sh = getOrCreateSheet(ABA_COMANDAS);
+  const data = sh.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(idComanda)) {
+      sh.getRange(i + 1, 2).setValue(novoNome);
+      return { sucesso: true };
+    }
+  }
+  return { sucesso: false, erro: "Comanda não encontrada" };
+}
+
 function getScriptUrl() {
   return ScriptApp.getService().getUrl();
 }
+

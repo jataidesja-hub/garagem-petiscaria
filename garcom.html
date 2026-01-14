@@ -583,7 +583,14 @@
     <div id="modalDetalhes" class="overlay">
         <div class="modal-sheet">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
-                <h2 id="view-nome" style="margin:0">Mesa</h2>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <h2 id="view-nome" style="margin:0">Mesa</h2>
+                    <button onclick="editarNomeMesa()" id="btn-edit-nome"
+                        style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:1.2rem; display:none;"
+                        title="Editar Nome">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
                 <button onclick="fecharModais()"
                     style="background:none; border:none; color:white; font-size:1.8rem; padding: 5px;">✕</button>
             </div>
@@ -898,6 +905,7 @@
             const isFechada = status === 'FECHADA';
             document.getElementById('btn-pagar').style.display = isFechada ? 'none' : 'flex';
             document.getElementById('btn-reimprimir').style.display = isFechada ? 'flex' : 'none';
+            document.getElementById('btn-edit-nome').style.display = isFechada ? 'none' : 'block';
             document.querySelector('.search-container').style.display = isFechada ? 'none' : 'block';
             document.querySelectorAll('.btn-del').forEach(b => b.style.display = isFechada ? 'none' : 'block');
 
@@ -951,6 +959,22 @@
                 document.getElementById('tabela-itens').innerHTML = html || '<tr><td colspan="2" align="center">Vazio</td></tr>';
                 document.getElementById('view-total').innerText = 'Saldo Aberto: R$ ' + totalAtual.toFixed(2);
             }).buscarItensComanda(idAtivo);
+        }
+
+        function editarNomeMesa() {
+            const nomeAntigo = document.getElementById('view-nome').innerText;
+            const novoNome = prompt("Digite o novo nome para esta mesa:", nomeAntigo);
+            if (novoNome && novoNome !== nomeAntigo) {
+                mostrarCarregando("Alterando nome...");
+                google.script.run.withSuccessHandler(res => {
+                    if (res.sucesso) {
+                        document.getElementById('view-nome').innerText = novoNome;
+                        mostrarFinalizado("Nome alterado!", () => carregarComandas());
+                    } else {
+                        showToast("Erro ao alterar nome: " + res.erro, "error");
+                    }
+                }).alterarNomeMesa(idAtivo, novoNome);
+            }
         }
 
         function adicionarMais(cod, isBackground = false) {
