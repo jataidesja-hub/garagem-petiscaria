@@ -1001,29 +1001,26 @@
                 return;
             }
 
-            mostrarCarregando("Atualizando dados...");
+            // Alerta de depuração (Remover depois de funcionar)
+            console.log("Tentando alterar ID:", idAtivo, "para:", novoNome);
+
+            mostrarCarregando("Atualizando...");
             google.script.run
                 .withSuccessHandler(res => {
+                    console.log("Resposta do servidor:", res);
                     if (res && res.sucesso) {
-                        // Atualiza o nome na interface imediatamente
-                        document.getElementById('view-nome').innerText = novoNome;
-
-                        // Fecha os modais de edição e detalhes
                         document.getElementById('modalEditNome').style.display = 'none';
-
-                        mostrarFinalizado("Nome atualizado!", () => {
-                            carregarComandas(); // Recarrega a lista do fundo
-                        });
+                        document.getElementById('view-nome').innerText = novoNome;
+                        mostrarFinalizado("Sucesso!", () => carregarComandas());
                     } else {
                         document.getElementById('loader').style.display = 'none';
-                        showToast("Erro: " + (res ? res.erro : "Resposta inválida"), "error");
+                        const erroMsg = res ? res.erro : "Resposta vazia do servidor";
+                        alert("Servidor diz: " + erroMsg);
                     }
                 })
                 .withFailureHandler(err => {
                     document.getElementById('loader').style.display = 'none';
-                    const msg = err.message || "Erro de conexão";
-                    showToast(msg, "error");
-                    alert("Atenção: " + msg); // Alerta para não passar despercebido
+                    alert("Falha Crítica de Conexão: " + JSON.stringify(err));
                     console.error(err);
                 })
                 .alterarNomeMesa(idAtivo, novoNome);
