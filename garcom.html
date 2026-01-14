@@ -699,6 +699,20 @@
         </div>
     </div>
 
+    <!-- Modal Editar Nome -->
+    <div id="modalEditNome" class="overlay" style="z-index: 2600;">
+        <div class="modal-sheet" style="text-align:center">
+            <h3>✏️ Editar Nome da Mesa</h3>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 10px 0;">Altere o nome identificador desta
+                comanda.</p>
+            <input type="text" id="edit-mesa-input" placeholder="Novo nome ou número"
+                style="text-align:center; margin-top: 1rem;">
+            <button class="btn btn-primary" onclick="confirmarEdicaoNome()">SALVAR ALTERAÇÃO</button>
+            <button class="btn btn-outline" style="margin-top:10px; border:none"
+                onclick="document.getElementById('modalEditNome').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
     <!-- Modal Confirmação / Impressão -->
     <div id="modalConfirm" class="overlay" style="z-index: 3000;">
         <div class="modal-sheet" style="text-align: center; border: 1px solid var(--primary);">
@@ -963,26 +977,38 @@
 
         function editarNomeMesa() {
             const nomeAntigo = document.getElementById('view-nome').innerText;
-            const novoNome = prompt("Digite o novo nome para esta mesa:", nomeAntigo);
-            if (novoNome && novoNome !== nomeAntigo) {
-                mostrarCarregando("Alterando nome...");
-                google.script.run
-                    .withSuccessHandler(res => {
-                        if (res.sucesso) {
-                            document.getElementById('view-nome').innerText = novoNome;
-                            mostrarFinalizado("Nome alterado!", () => carregarComandas());
-                        } else {
-                            document.getElementById('loader').style.display = 'none';
-                            showToast("Erro: " + res.erro, "error");
-                        }
-                    })
-                    .withFailureHandler(err => {
-                        document.getElementById('loader').style.display = 'none';
-                        showToast("Erro de conexão com o servidor", "error");
-                        console.error(err);
-                    })
-                    .alterarNomeMesa(idAtivo, novoNome);
+            document.getElementById('edit-mesa-input').value = nomeAntigo;
+            document.getElementById('modalEditNome').style.display = 'flex';
+            setTimeout(() => document.getElementById('edit-mesa-input').focus(), 100);
+        }
+
+        function confirmarEdicaoNome() {
+            const novoNome = document.getElementById('edit-mesa-input').value;
+            const nomeAntigo = document.getElementById('view-nome').innerText;
+
+            if (!novoNome) return showToast("Digite um nome!", "error");
+            if (novoNome === nomeAntigo) {
+                document.getElementById('modalEditNome').style.display = 'none';
+                return;
             }
+
+            mostrarCarregando("Atualizando dados...");
+            google.script.run
+                .withSuccessHandler(res => {
+                    if (res.sucesso) {
+                        document.getElementById('view-nome').innerText = novoNome;
+                        document.getElementById('modalEditNome').style.display = 'none';
+                        mostrarFinalizado("Nome atualizado!", () => carregarComandas());
+                    } else {
+                        document.getElementById('loader').style.display = 'none';
+                        showToast("Erro: " + res.erro, "error");
+                    }
+                })
+                .withFailureHandler(err => {
+                    document.getElementById('loader').style.display = 'none';
+                    showToast("Erro de conexão", "error");
+                })
+                .alterarNomeMesa(idAtivo, novoNome);
         }
 
         function adicionarMais(cod, isBackground = false) {

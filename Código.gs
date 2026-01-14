@@ -611,12 +611,13 @@ function alterarNomeMesa(idComanda, novoNome) {
   const sh = getOrCreateSheet(ABA_COMANDAS);
   const data = sh.getDataRange().getValues();
   for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(idComanda)) {
+    // Usamos trim() e String() para garantir a comparação
+    if (String(data[i][0]).trim() === String(idComanda).trim()) {
       sh.getRange(i + 1, 2).setValue(novoNome);
       return { sucesso: true };
     }
   }
-  return { sucesso: false, erro: "Comanda não encontrada" };
+  return { sucesso: false, erro: "Comanda ID " + idComanda + " não encontrada" };
 }
 
 function getScriptUrl() {
