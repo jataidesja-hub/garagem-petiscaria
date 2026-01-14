@@ -767,8 +767,17 @@
             const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
             function callGas(f, a, s, fl) {
                 fetch(URL_GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ function: f, args: a }) })
-                    .then(r => r.json()).then(res => { if (res && res.sucesso === false && fl) fl({ message: res.erro }); else if (s) s(res); })
-                    .catch(err => { if (fl) fl(err); console.error(err); });
+                    .then(r => r.json()).then(res => {
+                        if (res && res.sucesso === false) {
+                            if (fl) fl({ message: res.erro || "Erro desconhecido no servidor" });
+                        } else if (s) {
+                            s(res);
+                        }
+                    })
+                    .catch(err => {
+                        if (fl) fl(err);
+                        console.error(err);
+                    });
             }
             function ProxyFactory(s, fl) {
                 return new Proxy({}, { get: (t, p) => { if (p === 'withSuccessHandler') return (cb) => ProxyFactory(cb, fl); if (p === 'withFailureHandler') return (fb) => ProxyFactory(s, fb); return (...args) => callGas(p, args, s, fl); } });
@@ -1012,7 +1021,9 @@
                 })
                 .withFailureHandler(err => {
                     document.getElementById('loader').style.display = 'none';
-                    showToast("Erro de conexão", "error");
+                    const msg = err.message || "Erro de conexão";
+                    showToast(msg, "error");
+                    alert("Atenção: " + msg); // Alerta para não passar despercebido
                     console.error(err);
                 })
                 .alterarNomeMesa(idAtivo, novoNome);
