@@ -966,14 +966,22 @@
             const novoNome = prompt("Digite o novo nome para esta mesa:", nomeAntigo);
             if (novoNome && novoNome !== nomeAntigo) {
                 mostrarCarregando("Alterando nome...");
-                google.script.run.withSuccessHandler(res => {
-                    if (res.sucesso) {
-                        document.getElementById('view-nome').innerText = novoNome;
-                        mostrarFinalizado("Nome alterado!", () => carregarComandas());
-                    } else {
-                        showToast("Erro ao alterar nome: " + res.erro, "error");
-                    }
-                }).alterarNomeMesa(idAtivo, novoNome);
+                google.script.run
+                    .withSuccessHandler(res => {
+                        if (res.sucesso) {
+                            document.getElementById('view-nome').innerText = novoNome;
+                            mostrarFinalizado("Nome alterado!", () => carregarComandas());
+                        } else {
+                            document.getElementById('loader').style.display = 'none';
+                            showToast("Erro: " + res.erro, "error");
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        document.getElementById('loader').style.display = 'none';
+                        showToast("Erro de conexão com o servidor", "error");
+                        console.error(err);
+                    })
+                    .alterarNomeMesa(idAtivo, novoNome);
             }
         }
 
