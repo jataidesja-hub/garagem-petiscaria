@@ -409,6 +409,7 @@ function getDashboardData(inicio, fim) {
   let produtos = {}; 
   let categorias = {}; // Para média por categoria
   let diasUnicos = new Set();
+  let seriesHoras = {}; // Para o gráfico por hora
 
   if (data.length > 1) {
     data.slice(1).forEach(r => {
@@ -420,10 +421,12 @@ function getDashboardData(inicio, fim) {
       
       // Capturar data (YYYY-MM-DD)
       let dStr = "";
+      let hora = 0;
       try {
         let d = new Date(r[0]);
         if (!isNaN(d)) {
           dStr = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd");
+          hora = d.getHours();
           diasUnicos.add(dStr);
         }
       } catch(e){}
@@ -438,18 +441,17 @@ function getDashboardData(inicio, fim) {
         pagamentos[met] = (pagamentos[met] || 0) + t;
       }
 
-      // 2. Métricas de Produtos (Apenas se o código existir no Estoque)
+      // 2. Séries temporais (se for período de 1 dia ou hoje, agrupa por hora)
+      if (inicio === fim || !inicio) {
+        seriesHoras[hora] = (seriesHoras[hora] || 0) + t;
+      }
+
+      // 3. Métricas de Produtos (Apenas se o código existir no Estoque)
       if(estoque.includes(cod)) {
         qtd += q;
         if(!produtos[prodNome]) produtos[prodNome] = { qtd: 0, total: 0, categoria: 'Bebidas' };
         produtos[prodNome].qtd += q;
         produtos[prodNome].total += t;
-        
-        // Capturar categoria do estoque se possível (ou do item da venda se tiver)
-        // Como o item da venda r tem categoria na coluna 8 (I), mas r[8] é r[3]... 
-        // Vamos buscar a categoria no estoqueCache ou usar a que está no registro de Vendas (r[8]?)
-        // De acordo com criarEstrutura da ABA_VENDAS: r[0]=Data, r[1]=Tipo, r[2]=ID Com, r[3]=Cod, r[4]=Nome, r[5]=Qtd, r[6]=Preco, r[7]=Bruto... 
-        // Não tem categoria na ABA_VENDAS. Vamos buscar no estoque.
       }
     });
   }
@@ -498,7 +500,8 @@ function getDashboardData(inicio, fim) {
     metodos: pagamentos,
     ranking: ranking,
     todosProdutos: todosProdutos,
-    rankingCategorias: rankingCategorias
+    rankingCategorias: rankingCategorias,
+    seriesHoras: seriesHoras
   };
 }
 

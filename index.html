@@ -14,6 +14,7 @@
     <meta name="apple-mobile-web-app-title" content="A Garagem">
     <title>Dashboard - A Garagem</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #D4AF37;
@@ -658,6 +659,13 @@
                 </div>
 
                 <div class="card">
+                    <h3>📈 Evolução das Vendas (Hoje)</h3>
+                    <div style="height: 300px; position: relative; margin-top: 1rem;">
+                        <canvas id="vendasChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
                     <h3>📋 Comandas & Vendas Recentes</h3>
                     <div class="comanda-grid" id="lista-comandas-hist"></div>
                 </div>
@@ -973,6 +981,9 @@
                     document.getElementById('d-total').innerText = 'R$ ' + d.totalVendido.toFixed(2);
                     document.getElementById('d-qtd').innerText = d.qtdVendida;
                     document.getElementById('d-criticos').innerText = d.criticos;
+
+                    // Renderizar Gráfico
+                    renderChartVendas(d.seriesHoras);
 
                     // Renderizar Ranking com Média Diária
                     document.getElementById('d-ranking').innerHTML = `
@@ -1354,6 +1365,52 @@
                     }
                 });
             };
+
+            let vendasChart;
+            function renderChartVendas(series) {
+                const ctx = document.getElementById('vendasChart').getContext('2d');
+                const labels = Array.from({ length: 24 }, (_, i) => i + 'h');
+                const data = labels.map((_, i) => series[i] || 0);
+
+                if (vendasChart) {
+                    vendasChart.data.datasets[0].data = data;
+                    vendasChart.update();
+                } else {
+                    vendasChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Vendas (R$)',
+                                data: data,
+                                borderColor: '#D4AF37',
+                                backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 3,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#D4AF37'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#888', font: { size: 10 } }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { color: '#888', font: { size: 10 } }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
         </script>
 </body>
 
