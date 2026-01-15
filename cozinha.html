@@ -433,7 +433,8 @@
 
         window.onload = function () {
             carregarPedidos();
-            setInterval(carregarPedidos, 10000);
+            // Atualizar automaticamente a cada 5 segundos para a cozinha
+            setInterval(carregarPedidos, 5000);
         };
 
         function toggleSound() {
@@ -555,9 +556,7 @@
             }).marcarPedidoPronto(rowIndex);
         }
 
-        // Atualizar automaticamente a cada 30 segundos
-        setInterval(carregarPedidos, 30000);
-        window.onload = carregarPedidos;
+        // O intervalo e o onload já foram configurados no início do script
 
         // Registro de Service Worker para PWA
         if ('serviceWorker' in navigator) {

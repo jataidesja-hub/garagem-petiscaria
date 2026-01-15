@@ -538,9 +538,11 @@ function listarPedidosCozinha() {
          }
        } catch(e) {}
        
-       // Filtro: Refeições ou Petiscos
-       // Status: PENDENTE sempre, PRONTO apenas se for de hoje
-       let isCozinha = (cat.includes('refeições') || cat.includes('refeicao') || cat.includes('petiscos') || cat.includes('petisco'));
+       // Filtro: Refeições, Petiscos, Cozinha, Lanches, etc.
+       // Adicionado mais termos para garantir que itens de cozinha apareçam corretamente.
+       let listaCozinha = ['refeições', 'refeicao', 'petiscos', 'petisco', 'cozinha', 'comida', 'lanche', 'porção', 'porcao', 'pizza', 'massa', 'sobremesa', 'hamburguer', 'espetinho', 'caldo', 'porções'];
+       let isCozinha = listaCozinha.some(termo => cat.includes(termo));
+       
        let showPendente = (status === 'PENDENTE');
        let showProntoHoje = (status === 'PRONTO' && dataPed === hojeStr);
 
