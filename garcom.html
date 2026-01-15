@@ -524,6 +524,32 @@
             cursor: pointer;
             padding: 5px;
         }
+
+        /* SKELETON LOADING */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-pulse 1.5s infinite;
+            border-radius: 15px;
+        }
+
+        @keyframes skeleton-pulse {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-card {
+            height: 120px;
+            width: 100%;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
     </style>
 </head>
 
@@ -876,19 +902,40 @@
 
         function carregarComandas(isBackground = false) {
             const syncIcon = document.getElementById('sync-icon');
+            const grid = document.getElementById('lista-comandas');
+
             if (syncIcon) syncIcon.classList.add('fa-spin');
+
+            // Mostrar skeleton apenas em trocas manuais de aba (não em background sync)
+            if (!isBackground) {
+                grid.innerHTML = `
+                    <div class="skeleton-card skeleton"></div>
+                    <div class="skeleton-card skeleton"></div>
+                    <div class="skeleton-card skeleton"></div>
+                    <div class="skeleton-card skeleton"></div>
+                `;
+            }
 
             google.script.run.withSuccessHandler(lista => {
                 if (syncIcon) syncIcon.classList.remove('fa-spin');
                 if (!Array.isArray(lista)) return;
 
-                document.getElementById('lista-comandas').innerHTML = lista.filter(c => c.status === statusTabAtiva).map(c => `
-                <div class="comanda-card" onclick="abrirDetalhes('${c.id}', '${c.nome}', '${c.status}')">
-                    <b>${c.nome}</b><br>
-                    <span style="color:var(--primary); font-weight:700">R$ ${c.total.toFixed(2)}</span>
-                    <br><small style="font-size: 0.6rem; color: var(--text-muted)">${c.dataExibicao}</small>
-                </div>
-            `).join('');
+                const filtered = lista.filter(c => c.status === statusTabAtiva);
+
+                if (filtered.length === 0) {
+                    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted); opacity: 0.8;">
+                        <i class="fas fa-beer" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                        Nenhuma mesa ${statusTabAtiva === 'ABERTA' ? 'aberta' : 'fechada'} no momento.
+                    </div>`;
+                } else {
+                    grid.innerHTML = filtered.map(c => `
+                        <div class="comanda-card" onclick="abrirDetalhes('${c.id}', '${c.nome}', '${c.status}')" style="animation: fadeIn 0.3s ease-out forwards;">
+                            <b>${c.nome}</b><br>
+                            <span style="color:var(--primary); font-weight:700">R$ ${c.total.toFixed(2)}</span>
+                            <br><small style="font-size: 0.6rem; color: var(--text-muted)">${c.dataExibicao}</small>
+                        </div>
+                    `).join('');
+                }
 
                 // Se o modal de detalhes estiver aberto e estivermos em background, atualiza os itens
                 if (isBackground && document.getElementById('modalDetalhes').style.display === 'flex') {
