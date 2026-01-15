@@ -1053,7 +1053,11 @@
                     totalAtual += i.total;
                     consumoTotal += i.total;
                     return `<tr>
-                        <td><b>${i.nome}</b><br><small>${i.qtd}x R$ ${i.preco.toFixed(2)}</small></td>
+                        <td>
+                            <b>${i.nome}</b><br>
+                            <small>${i.qtd}x R$ ${i.preco.toFixed(2)}</small>
+                            ${i.obs ? `<br><small style="color:var(--primary); font-style:italic">📝 ${i.obs}</small>` : ''}
+                        </td>
                         <td align="right">
                             <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end">
                                 <span style="margin-right:8px">R$ ${i.total.toFixed(2)}</span>

@@ -187,12 +187,12 @@ function buscarItensComanda(idComanda) {
     const rawItens = data.slice(1).filter(r => String(r[0]) === String(idComanda));
     
     // Mapeamos e AGRUPAMOS para o garçom ver a soma (ex: 3x Cerveja)
+    // Se houver observação diferente, mantemos separado para clareza
     let agrupados = {};
     rawItens.forEach(r => {
       let cod = String(r[1]);
       let cat = String(r[8] || '');
-      // Se for pagamento ou vier da aba vendas, tratamos com chave única (ou mantemos como está)
-      let chave = (cat === 'PAGAMENTO' || cat === 'Venda') ? (cod + Math.random()) : cod;
+      let chave = (cat === 'PAGAMENTO' || cat === 'Venda') ? (cod + Math.random()) : (cod + "_" + (r[7] || ''));
       
       if (!agrupados[chave]) {
         agrupados[chave] = {
@@ -201,7 +201,8 @@ function buscarItensComanda(idComanda) {
           qtd: 0,
           preco: Number(r[4]),
           total: 0,
-          categoria: cat
+          categoria: cat,
+          obs: String(r[7] || '')
         };
       }
       agrupados[chave].qtd += Number(r[3]);
@@ -538,10 +539,12 @@ function listarPedidosCozinha() {
          }
        } catch(e) {}
        
-       // Filtro: Refeições, Petiscos, Cozinha, Lanches, etc.
-       // Adicionado mais termos para garantir que itens de cozinha apareçam corretamente.
-       let listaCozinha = ['refeições', 'refeicao', 'petiscos', 'petisco', 'cozinha', 'comida', 'lanche', 'porção', 'porcao', 'pizza', 'massa', 'sobremesa', 'hamburguer', 'espetinho', 'caldo', 'porções'];
+       // FILTRO DE COZINHA: Expandido para aceitar quase qualquer termo de comida/preparo
+       let listaCozinha = ['refeições', 'refeicao', 'petiscos', 'petisco', 'cozinha', 'comida', 'lanche', 'porção', 'porcao', 'pizza', 'massa', 'sobremesa', 'hamburguer', 'espetinho', 'caldo', 'porções', 'sucos', 'suco', 'batida', 'caipirinha', 'drinks', 'drink', 'bebibas preparadas'];
        let isCozinha = listaCozinha.some(termo => cat.includes(termo));
+       
+       // Fallback: se a categoria for "Bebidas" ou "Cervejas", NÃO vai para a cozinha, 
+       // a menos que o nome do produto contenha palavras de preparo (opcional).
        
        let showPendente = (status === 'PENDENTE');
        let showProntoHoje = (status === 'PRONTO' && dataPed === hojeStr);
