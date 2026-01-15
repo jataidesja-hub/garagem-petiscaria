@@ -659,15 +659,15 @@
                 </div>
 
                 <div class="card">
+                    <h3>📋 Comandas & Vendas Recentes</h3>
+                    <div class="comanda-grid" id="lista-comandas-hist"></div>
+                </div>
+
+                <div class="card">
                     <h3>📈 Evolução das Vendas (Hoje)</h3>
                     <div style="height: 300px; position: relative; margin-top: 1rem;">
                         <canvas id="vendasChart"></canvas>
                     </div>
-                </div>
-
-                <div class="card">
-                    <h3>📋 Comandas & Vendas Recentes</h3>
-                    <div class="comanda-grid" id="lista-comandas-hist"></div>
                 </div>
 
                 <div class="dash-grid">
@@ -982,9 +982,6 @@
                     document.getElementById('d-qtd').innerText = d.qtdVendida;
                     document.getElementById('d-criticos').innerText = d.criticos;
 
-                    // Renderizar Gráfico
-                    renderChartVendas(d.seriesHoras);
-
                     // Renderizar Ranking com Média Diária
                     document.getElementById('d-ranking').innerHTML = `
                     <thead>
@@ -1049,6 +1046,11 @@
                         </div>`;
                     }
                     document.getElementById('d-pagamentos').innerHTML = pagHtml || 'Nenhum pagamento.';
+
+                    // Renderizar Gráfico por último para não travar o resto
+                    try {
+                        renderChartVendas(d.seriesHoras);
+                    } catch (e) { console.error("Erro no gráfico:", e); }
                 }).getDashboardData(inicio, fim);
             }
 
@@ -1368,7 +1370,10 @@
 
             let vendasChart;
             function renderChartVendas(series) {
-                const ctx = document.getElementById('vendasChart').getContext('2d');
+                if (!series) return;
+                const ctx = document.getElementById('vendasChart')?.getContext('2d');
+                if (!ctx) return;
+
                 const labels = Array.from({ length: 24 }, (_, i) => i + 'h');
                 const data = labels.map((_, i) => series[i] || 0);
 
