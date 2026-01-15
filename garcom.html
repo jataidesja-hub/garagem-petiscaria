@@ -546,10 +546,18 @@
             onclick="document.getElementById('pwa-install-banner').style.display='none'">✕</button>
     </div>
 
-    <header style="display:flex; justify-content:space-between; align-items:center;">
-        <span>🍻 A GARAGEM PETISCARIA</span>
+    <header
+        style="display:flex; justify-content:space-between; align-items:center; background: rgba(13, 13, 18, 0.95); border-bottom: 1px solid var(--primary);">
+        <div style="display:flex; align-items:center; gap: 15px;">
+            <button onclick="voltarAoPortal()"
+                style="background: var(--primary); color: #000; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.85rem; transition: 0.3s; box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2);"
+                title="Voltar ao Início">
+                <i class="fas fa-arrow-left"></i> VOLTAR
+            </button>
+            <span style="font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: 1px;">🍻 A GARAGEM</span>
+        </div>
         <button onclick="carregarComandas(); carregarProdutos();"
-            style="background:none; border:none; color:var(--primary); font-size:1.2rem; cursor:pointer;"
+            style="background:rgba(255,255,255,0.05); border:1px solid var(--glass); color:var(--primary); padding:8px; border-radius:10px; cursor:pointer;"
             title="Sincronizar">
             <i class="fas fa-sync-alt" id="sync-icon"></i>
         </button>
@@ -789,6 +797,16 @@
         let modoPagamento = 'TOTAL';
         let statusTabAtiva = 'ABERTA';
 
+        function voltarAoPortal() {
+            if (window.location.hostname !== 'script.google.com') {
+                window.location.href = "index.html";
+            } else {
+                google.script.run.withSuccessHandler(url => {
+                    window.top.location.href = url;
+                }).getScriptUrl();
+            }
+        }
+
         window.onload = function () {
             iniciarApp();
             // Sincronização automática a cada 15 segundos
@@ -913,13 +931,36 @@
 
         function selecionarProduto(cod) {
             let p = estoqueCache.find(x => x.codigo === String(cod));
-            let nomeProd = p ? p.nome : "este item";
+            if (!p) return;
 
-            userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} à mesa?`, () => {
-                document.getElementById('search-prod').value = '';
+            let nomeProd = p.nome;
+            let cat = (p.categoria || "").toLowerCase();
+            let isCozinha = cat.includes('refeição') || cat.includes('refeicao') || cat.includes('petisco') || cat.includes('cozinha');
+
+            if (isCozinha) {
+                let obs = prompt(`Observação para ${nomeProd} (Ex: Sem cebola):`, "");
+                if (obs === null) return; // Cancelado
+
                 mostrarCarregando("Adicionando...");
-                google.script.run.withSuccessHandler(() => { mostrarFinalizado("Adicionado!", () => atualizarItens()); }).adicionarItemComanda(idAtivo, String(cod));
-            });
+                google.script.run.withSuccessHandler(() => {
+                    mostrarFinalizado("Adicionado!", () => {
+                        atualizarItens();
+                        toggleDropdown(false);
+                        document.getElementById('search-prod').value = '';
+                    });
+                }).adicionarItemComanda(idAtivo, String(cod), obs);
+            } else {
+                userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} à mesa?`, () => {
+                    document.getElementById('search-prod').value = '';
+                    mostrarCarregando("Adicionando...");
+                    google.script.run.withSuccessHandler(() => {
+                        mostrarFinalizado("Adicionado!", () => {
+                            atualizarItens();
+                            toggleDropdown(false);
+                        });
+                    }).adicionarItemComanda(idAtivo, String(cod), "");
+                });
+            }
         }
 
         function abrirDetalhes(id, nome, status = 'ABERTA') {

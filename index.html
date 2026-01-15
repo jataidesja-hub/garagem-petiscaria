@@ -731,213 +731,251 @@
                                 VENDA</button>
                         </div>
                     </div>
+                    <div class="card" style="margin-top: 2rem;">
+                        <h3>📋 Vendas Diretas Recentes</h3>
+                        <div class="comanda-grid" id="lista-vd-hist" style="margin-top: 1rem;"></div>
+                    </div>
                 </div>
+            </div> <!-- Fim container -->
+        </div> <!-- Fim view-admin -->
+
+        <!-- PWA INSTALL BANNER -->
+        <div id="pwa-install-banner"
+            style="position: fixed; bottom: 2rem; left: 5%; right: 5%; background: linear-gradient(135deg, #1a1a24, #111); border: 1px solid var(--primary); border-radius: 20px; padding: 1.5rem; display: none; align-items: center; gap: 1.5rem; z-index: 9999; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8); animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);">
+            <div
+                style="font-size: 2.5rem; color: var(--primary); background: rgba(212, 175, 55, 0.1); padding: 15px; border-radius: 15px;">
+                <i class="fas fa-mobile-alt"></i>
             </div>
-        </div> <!-- Fim container -->
-    </div> <!-- Fim view-admin -->
+            <div style="flex: 1;">
+                <h4 style="margin: 0; font-size: 1rem; color: var(--text);">Instalar App</h4>
+                <p style="margin: 5px 0 0; font-size: 0.8rem; color: var(--text-muted);">Adicione à tela de início para
+                    acesso rápido.</p>
+            </div>
+            <button id="btn-pwa-install"
+                style="background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer;">INSTALAR</button>
+            <button onclick="document.getElementById('pwa-install-banner').style.display='none'"
+                style="background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 5px;">✕</button>
+        </div>
 
-    <div id="toast-container" class="toast-container"></div>
+        <style>
+            @keyframes slideUp {
+                from {
+                    transform: translateY(100px);
+                    opacity: 0;
+                }
 
-    <div id="loader" class="loader-overlay">
-        <div class="spinner"></div>
-        <p id="loader-text" style="margin-top:15px; font-weight:600;"></p>
-    </div>
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        </style>
 
-    <!-- Modal Visualizar Comanda -->
-    <div id="modalVisualizar" class="overlay">
-        <div class="modal-box">
-            <div id="print-area">
-                <div
-                    style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
-                    <h1 style="margin:0; font-size: 24px; text-transform: uppercase;">A GARAGEM</h1>
-                    <p style="margin:2px 0; font-size: 14px; font-weight: bold;">PETISCARIA & CERVEJARIA</p>
-                    <p
-                        style="margin:5px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; font-size: 12px;">
-                        EXTRATO DE CONSUMO</p>
-                </div>
-                <h2 id="v-nome" style="margin-bottom: 1.5rem; text-align: center;">Mesa</h2>
-                <table id="v-itens" style="width: 100%; font-size: 12px; border-collapse: collapse;"></table>
-                <div style="margin-top: 1.5rem; text-align: right; border-top: 1px dashed #000; padding-top: 10px;">
-                    <h3 id="v-total" style="font-size: 1.5rem; color: #D4AF37;">Total: R$ 0,00</h3>
-                </div>
-                <div style="text-align:center; margin-top: 30px; border-top: 1px solid #000; padding-top: 10px;"
-                    class="print-only">
-                    <p style="font-size: 12px; font-weight: bold;">BOHEMIA PURO MALTE</p>
-                    <p style="font-size: 11px; margin-top: 5px;">Obrigado pela preferência!</p>
+        <div id="toast-container" class="toast-container"></div>
+
+        <div id="loader" class="loader-overlay">
+            <div class="spinner"></div>
+            <p id="loader-text" style="margin-top:15px; font-weight:600;"></p>
+        </div>
+
+        <!-- Modal Visualizar Comanda -->
+        <div id="modalVisualizar" class="overlay">
+            <div class="modal-box">
+                <div id="print-area">
                     <div
-                        style="margin-top: 15px; border-top: 1px dotted #000; padding-top: 5px; font-size: 9px; opacity: 0.8;">
-                        Developed by: J.A Software & Solution<br>
-                        (87) 9 8143-6052
+                        style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
+                        <h1 style="margin:0; font-size: 24px; text-transform: uppercase;">A GARAGEM</h1>
+                        <p style="margin:2px 0; font-size: 14px; font-weight: bold;">PETISCARIA & CERVEJARIA</p>
+                        <p
+                            style="margin:5px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; font-size: 12px;">
+                            EXTRATO DE CONSUMO</p>
+                    </div>
+                    <h2 id="v-nome" style="margin-bottom: 1.5rem; text-align: center;">Mesa</h2>
+                    <table id="v-itens" style="width: 100%; font-size: 12px; border-collapse: collapse;"></table>
+                    <div style="margin-top: 1.5rem; text-align: right; border-top: 1px dashed #000; padding-top: 10px;">
+                        <h3 id="v-total" style="font-size: 1.5rem; color: #D4AF37;">Total: R$ 0,00</h3>
+                    </div>
+                    <div style="text-align:center; margin-top: 30px; border-top: 1px solid #000; padding-top: 10px;"
+                        class="print-only">
+                        <p style="font-size: 12px; font-weight: bold;">BOHEMIA PURO MALTE</p>
+                        <p style="font-size: 11px; margin-top: 5px;">Obrigado pela preferência!</p>
+                        <div
+                            style="margin-top: 15px; border-top: 1px dotted #000; padding-top: 5px; font-size: 9px; opacity: 0.8;">
+                            Developed by: J.A Software & Solution<br>
+                            (87) 9 8143-6052
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 2rem;" class="no-print">
-                <button class="btn btn-primary" style="flex: 1;" onclick="window.print()">🖨️ Imprimir Cupom</button>
-                <button class="btn btn-outline" onclick="fecharModais()">Fechar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Editar/Novo Produto -->
-    <div id="modalEdit" class="overlay">
-        <div class="modal-box">
-            <h3 id="edit-title">📝 Editar Produto</h3>
-            <div style="margin-top: 1.5rem;">
-                <label>Nome do Produto</label>
-                <input type="text" id="edit-nome" placeholder="Ex: Cerveja Lata">
-
-                <label>Categoria</label>
-                <select id="edit-categoria">
-                    <option value="Refeições">🍽️ Refeições</option>
-                    <option value="Petiscos">🍟 Petiscos</option>
-                    <option value="Bebidas">🥤 Bebidas</option>
-                    <option value="Cervejas">🍺 Cervejas</option>
-                    <option value="Bebidas Quentes">🥃 Bebidas Quentes</option>
-                    <option value="Outros">📦 Outros</option>
-                </select>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><label>Preço Venda</label><input type="number" id="edit-preco" step="0.01"></div>
-                    <div><label id="label-estoque">Aumentar Estoque em</label><input type="number" id="edit-estoque">
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div><label>Estoque Mínimo</label><input type="number" id="edit-minimo"></div>
-                    <div><label>ID / Código</label><input type="text" id="edit-codigo" placeholder="Auto-gerado"></div>
-                </div>
-
-                <label>URL da Imagem</label>
-                <input type="text" id="edit-img" placeholder="https://...">
-
-                <div style="display: flex; gap: 10px; margin-top: 1rem;">
-                    <button class="btn btn-primary" style="flex: 1;" onclick="salvarEdicao()">Salvar</button>
-                    <button class="btn btn-outline" onclick="fecharModais()">Cancelar</button>
+                <div style="display: flex; gap: 10px; margin-top: 2rem;" class="no-print">
+                    <button class="btn btn-primary" style="flex: 1;" onclick="window.print()">🖨️ Imprimir
+                        Cupom</button>
+                    <button class="btn btn-outline" onclick="fecharModais()">Fechar</button>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Modal Editar/Novo Produto -->
+        <div id="modalEdit" class="overlay">
+            <div class="modal-box">
+                <h3 id="edit-title">📝 Editar Produto</h3>
+                <div style="margin-top: 1.5rem;">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="edit-nome" placeholder="Ex: Cerveja Lata">
+
+                    <label>Categoria</label>
+                    <select id="edit-categoria">
+                        <option value="Refeições">🍽️ Refeições</option>
+                        <option value="Petiscos">🍟 Petiscos</option>
+                        <option value="Bebidas">🥤 Bebidas</option>
+                        <option value="Cervejas">🍺 Cervejas</option>
+                        <option value="Bebidas Quentes">🥃 Bebidas Quentes</option>
+                        <option value="Outros">📦 Outros</option>
+                    </select>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><label>Preço Venda</label><input type="number" id="edit-preco" step="0.01"></div>
+                        <div><label id="label-estoque">Aumentar Estoque em</label><input type="number"
+                                id="edit-estoque">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><label>Estoque Mínimo</label><input type="number" id="edit-minimo"></div>
+                        <div><label>ID / Código</label><input type="text" id="edit-codigo" placeholder="Auto-gerado">
+                        </div>
+                    </div>
+
+                    <label>URL da Imagem</label>
+                    <input type="text" id="edit-img" placeholder="https://...">
+
+                    <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                        <button class="btn btn-primary" style="flex: 1;" onclick="salvarEdicao()">Salvar</button>
+                        <button class="btn btn-outline" onclick="fecharModais()">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
-    <script>
-        // CONFIGURAÇÃO VERCEL -> GOOGLE
-        // COLE SEU LINK DO GOOGLE SCRIPT AQUI PARA FUNCIONAR NA VERCEL:
-        const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec"; // EX: https://script.google.com/macros/s/.../exec
+        <script>
+            // CONFIGURAÇÃO VERCEL -> GOOGLE
+            // COLE SEU LINK DO GOOGLE SCRIPT AQUI PARA FUNCIONAR NA VERCEL:
+            const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec"; // EX: https://script.google.com/macros/s/.../exec
 
-        (function () {
-            if (typeof google !== 'undefined' && google.script) return;
-            const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
-            function callGas(f, a, s, fl) {
-                fetch(URL_GAS, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ function: f, args: a })
-                })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res && res.sucesso === false && fl) fl({ message: res.erro });
-                        else if (s) s(res);
+            (function () {
+                if (typeof google !== 'undefined' && google.script) return;
+                const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
+                function callGas(f, a, s, fl) {
+                    fetch(URL_GAS, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ function: f, args: a })
                     })
-                    .catch(err => { if (fl) fl(err); console.error("GAS Bridge Error:", err); });
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res && res.sucesso === false && fl) fl({ message: res.erro });
+                            else if (s) s(res);
+                        })
+                        .catch(err => { if (fl) fl(err); console.error("GAS Bridge Error:", err); });
+                }
+                function ProxyFactory(s, fl) {
+                    return new Proxy({}, {
+                        get: (t, p) => {
+                            if (p === 'withSuccessHandler') return (cb) => ProxyFactory(cb, fl);
+                            if (p === 'withFailureHandler') return (fb) => ProxyFactory(s, fb);
+                            return (...args) => callGas(p, args, s, fl);
+                        }
+                    });
+                }
+                window.google = { script: { run: ProxyFactory() } };
+            })();
+
+            let estoqueCache = [], carrinhoVD = [], editingCode = null;
+
+            function mostrarCarregando(t) {
+                document.getElementById('loader').style.display = 'flex';
+                document.getElementById('loader-text').innerText = t;
             }
-            function ProxyFactory(s, fl) {
-                return new Proxy({}, {
-                    get: (t, p) => {
-                        if (p === 'withSuccessHandler') return (cb) => ProxyFactory(cb, fl);
-                        if (p === 'withFailureHandler') return (fb) => ProxyFactory(s, fb);
-                        return (...args) => callGas(p, args, s, fl);
-                    }
-                });
+            function esconderCarregando() { document.getElementById('loader').style.display = 'none'; }
+
+            function showToast(message, type = 'info', duration = 3000) {
+                const toastContainer = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                toast.style.setProperty('--delay', `${duration / 1000}s`); // Set CSS variable for animation delay
+
+                toastContainer.appendChild(toast);
+
+                // Remove toast after animation
+                setTimeout(() => {
+                    toast.remove();
+                }, duration + 500); // 500ms for fadeOut animation
             }
-            window.google = { script: { run: ProxyFactory() } };
-        })();
 
-        let estoqueCache = [], carrinhoVD = [], editingCode = null;
-
-        function mostrarCarregando(t) {
-            document.getElementById('loader').style.display = 'flex';
-            document.getElementById('loader-text').innerText = t;
-        }
-        function esconderCarregando() { document.getElementById('loader').style.display = 'none'; }
-
-        function showToast(message, type = 'info', duration = 3000) {
-            const toastContainer = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            toast.style.setProperty('--delay', `${duration / 1000}s`); // Set CSS variable for animation delay
-
-            toastContainer.appendChild(toast);
-
-            // Remove toast after animation
-            setTimeout(() => {
-                toast.remove();
-            }, duration + 500); // 500ms for fadeOut animation
-        }
-
-        function switchTab(id, el) {
-            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).style.display = 'block';
-            el.classList.add('active');
-            if (id === 'tab-dash') carregarDash();
-            if (id === 'tab-estoque') carregarEstoque();
-        }
-
-        let notificacoesVistas = new Set();
-        function checarNotificacoes() {
-            google.script.run.withSuccessHandler(lista => {
-                if (!Array.isArray(lista)) return;
-                lista.forEach(n => {
-                    let chave = n.idComanda + n.nome + n.qtd;
-                    if (!notificacoesVistas.has(chave)) {
-                        showToast(`🍳 PRONTO: ${n.nome} (${n.qtd}x) - Mesa: ${n.mesa}`, "ready", 30000);
-                        notificacoesVistas.add(chave);
-                    }
-                });
-            }).getNotificacoesCozinha();
-        }
-
-        // Iniciar polling de notificações a cada 10 segundos e Dashboard a cada 30 segundos
-        setInterval(checarNotificacoes, 10000);
-        setInterval(() => {
-            if (document.getElementById('tab-dash').style.display !== 'none') {
-                carregarDash();
+            function switchTab(id, el) {
+                document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.getElementById(id).style.display = 'block';
+                el.classList.add('active');
+                if (id === 'tab-dash') carregarDash();
+                if (id === 'tab-estoque') carregarEstoque();
             }
-        }, 30000);
 
-        function carregarDash() {
-            const inicio = document.getElementById('dash-inicio').value;
-            const fim = document.getElementById('dash-fim').value;
+            let notificacoesVistas = new Set();
+            function checarNotificacoes() {
+                google.script.run.withSuccessHandler(lista => {
+                    if (!Array.isArray(lista)) return;
+                    lista.forEach(n => {
+                        let chave = n.idComanda + n.nome + n.qtd;
+                        if (!notificacoesVistas.has(chave)) {
+                            showToast(`🍳 PRONTO: ${n.nome} (${n.qtd}x) - Mesa: ${n.mesa}`, "ready", 30000);
+                            notificacoesVistas.add(chave);
+                        }
+                    });
+                }).getNotificacoesCozinha();
+            }
 
-            google.script.run.withSuccessHandler(lista => {
-                if (!Array.isArray(lista)) return;
-                let html = "";
-                lista.forEach(c => {
-                    let match = true;
-                    if (inicio && c.data < inicio) match = false;
-                    if (fim && c.data > fim) match = false;
+            // Iniciar polling de notificações a cada 10 segundos e Dashboard a cada 30 segundos
+            setInterval(checarNotificacoes, 10000);
+            setInterval(() => {
+                if (document.getElementById('tab-dash').style.display !== 'none') {
+                    carregarDash();
+                }
+            }, 30000);
 
-                    if (match) {
-                        html += `
+            function carregarDash() {
+                const inicio = document.getElementById('dash-inicio').value;
+                const fim = document.getElementById('dash-fim').value;
+
+                google.script.run.withSuccessHandler(lista => {
+                    if (!Array.isArray(lista)) return;
+                    let html = "";
+                    lista.forEach(c => {
+                        let match = true;
+                        if (inicio && c.data < inicio) match = false;
+                        if (fim && c.data > fim) match = false;
+
+                        if (match) {
+                            html += `
                             <div class="comanda-item" onclick="visualizar('${c.id}', '${c.nome}')">
                                 <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
                                 <b>${c.nome}</b><br>
                                 <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${c.total.toFixed(2)}</span>
                                 <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${c.dataExibicao}</div>
                             </div>`;
-                    }
-                });
-                document.getElementById('lista-comandas-hist').innerHTML = html || 'Sem dados.';
-            }).listarTodasComandas();
+                        }
+                    });
+                    document.getElementById('lista-comandas-hist').innerHTML = html || 'Sem dados.';
+                }).listarTodasComandas();
 
-            google.script.run.withSuccessHandler(d => {
-                document.getElementById('d-total').innerText = 'R$ ' + d.totalVendido.toFixed(2);
-                document.getElementById('d-qtd').innerText = d.qtdVendida;
-                document.getElementById('d-criticos').innerText = d.criticos;
+                google.script.run.withSuccessHandler(d => {
+                    document.getElementById('d-total').innerText = 'R$ ' + d.totalVendido.toFixed(2);
+                    document.getElementById('d-qtd').innerText = d.qtdVendida;
+                    document.getElementById('d-criticos').innerText = d.criticos;
 
-                // Renderizar Ranking com Média Diária
-                document.getElementById('d-ranking').innerHTML = `
+                    // Renderizar Ranking com Média Diária
+                    document.getElementById('d-ranking').innerHTML = `
                     <thead>
                         <tr>
                             <th style="font-size:0.7rem">PRODUTO</th>
@@ -955,16 +993,16 @@
                     `).join('')}
                     </tbody>` || '<tr><td colspan="3" align="center">Nenhuma venda de produto registrada.</td></tr>';
 
-                // Renderizar Ranking de Produtos Agrupados por Categoria
-                let groupedHtml = "";
-                let cats = [...new Set(d.todosProdutos.map(p => p.categoria))].sort();
+                    // Renderizar Ranking de Produtos Agrupados por Categoria
+                    let groupedHtml = "";
+                    let cats = [...new Set(d.todosProdutos.map(p => p.categoria))].sort();
 
-                if (d.todosProdutos.length === 0) {
-                    groupedHtml = '<p style="text-align:center; color:var(--text-muted)">Nenhuma venda registrada.</p>';
-                } else {
-                    cats.forEach(cat => {
-                        let prods = d.todosProdutos.filter(p => p.categoria === cat);
-                        groupedHtml += `
+                    if (d.todosProdutos.length === 0) {
+                        groupedHtml = '<p style="text-align:center; color:var(--text-muted)">Nenhuma venda registrada.</p>';
+                    } else {
+                        cats.forEach(cat => {
+                            let prods = d.todosProdutos.filter(p => p.categoria === cat);
+                            groupedHtml += `
                             <div style="margin-bottom: 20px;">
                                 <h4 style="color:var(--accent); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:10px;">${cat}</h4>
                                 <table style="width:100%">
@@ -986,29 +1024,29 @@
                                     </tbody>
                                 </table>
                             </div>`;
-                    });
-                }
-                document.getElementById('d-ranking-cat').innerHTML = groupedHtml;
+                        });
+                    }
+                    document.getElementById('d-ranking-cat').innerHTML = groupedHtml;
 
-                // Renderizar Pagamentos
-                let pagHtml = "";
-                for (let m in d.metodos) {
-                    pagHtml += `
+                    // Renderizar Pagamentos
+                    let pagHtml = "";
+                    for (let m in d.metodos) {
+                        pagHtml += `
                         <div style="display:flex; justify-content:space-between; padding:10px; background:rgba(255,255,255,0.03); border-radius:10px;">
                             <span>${m}</span>
                             <b>R$ ${d.metodos[m].toFixed(2)}</b>
                         </div>`;
-                }
-                document.getElementById('d-pagamentos').innerHTML = pagHtml || 'Nenhum pagamento.';
-            }).getDashboardData(inicio, fim);
-        }
+                    }
+                    document.getElementById('d-pagamentos').innerHTML = pagHtml || 'Nenhum pagamento.';
+                }).getDashboardData(inicio, fim);
+            }
 
-        function carregarEstoque() {
-            google.script.run.withSuccessHandler(data => {
-                estoqueCache = data;
-                let html = `<table><thead><tr><th></th><th>Produto</th><th>Cat.</th><th>Preço</th><th>Qtd</th><th>Ações</th></tr></thead><tbody>`;
-                data.forEach(p => {
-                    html += `
+            function carregarEstoque() {
+                google.script.run.withSuccessHandler(data => {
+                    estoqueCache = data;
+                    let html = `<table><thead><tr><th></th><th>Produto</th><th>Cat.</th><th>Preço</th><th>Qtd</th><th>Ações</th></tr></thead><tbody>`;
+                    data.forEach(p => {
+                        html += `
                         <tr>
                             <td><img src="${p.imagem}" class="img-estoque"></td>
                             <td><b>${p.nome}</b><br><small>${p.codigo}</small></td>
@@ -1017,288 +1055,306 @@
                             <td style="color:${p.critico ? 'var(--primary)' : 'inherit'}">${p.estoque} ${p.critico ? '⚠️' : ''}</td>
                             <td><button class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="abrirEdicao('${p.codigo}')">Editar</button></td>
                         </tr>`;
-                });
-                document.getElementById('lista-estoque').innerHTML = html + '</tbody></table>';
-            }).listarEstoque();
-        }
-
-        function abrirNovoProduto() {
-            editingCode = null;
-            document.getElementById('edit-title').innerText = "🆕 Novo Produto";
-            document.getElementById('label-estoque').innerText = "Estoque Inicial";
-            document.getElementById('edit-nome').value = "";
-            document.getElementById('edit-preco').value = "";
-            document.getElementById('edit-estoque').value = "";
-            document.getElementById('edit-minimo').value = "";
-            document.getElementById('edit-codigo').value = "";
-            document.getElementById('edit-img').value = "";
-            document.getElementById('modalEdit').style.display = 'flex';
-        }
-
-        function abrirEdicao(cod) {
-            let p = estoqueCache.find(x => x.codigo === cod);
-            editingCode = cod;
-            document.getElementById('edit-title').innerText = "📝 Editar Produto";
-            document.getElementById('label-estoque').innerText = "Adicionar ao Estoque";
-            document.getElementById('edit-nome').value = p.nome;
-            document.getElementById('edit-categoria').value = p.categoria || "Bebida";
-            document.getElementById('edit-preco').value = p.preco;
-            document.getElementById('edit-estoque').value = 0;
-            document.getElementById('edit-minimo').value = p.minimo;
-            document.getElementById('edit-codigo').value = p.codigo;
-            document.getElementById('edit-img').value = p.imagem;
-            document.getElementById('modalEdit').style.display = 'flex';
-        }
-
-        function salvarEdicao() {
-            let p = {
-                codigo: document.getElementById('edit-codigo').value || null,
-                nome: document.getElementById('edit-nome').value,
-                categoria: document.getElementById('edit-categoria').value,
-                preco: parseFloat(document.getElementById('edit-preco').value),
-                estoque: parseFloat(document.getElementById('edit-estoque').value),
-                minimo: parseFloat(document.getElementById('edit-minimo').value),
-                imagem: document.getElementById('edit-img').value
-            };
-            if (!p.nome || isNaN(p.preco)) {
-                alert("Preencha Nome e Preço!");
-                return;
+                    });
+                    document.getElementById('lista-estoque').innerHTML = html + '</tbody></table>';
+                }).listarEstoque();
             }
 
-            mostrarCarregando("Salvando...");
-            const func = editingCode ? 'salvarEdicaoProduto' : 'adicionarProduto';
-            google.script.run.withSuccessHandler(() => {
-                esconderCarregando(); fecharModais(); carregarEstoque();
-            })[func](p);
-        }
+            function abrirNovoProduto() {
+                editingCode = null;
+                document.getElementById('edit-title').innerText = "🆕 Novo Produto";
+                document.getElementById('label-estoque').innerText = "Estoque Inicial";
+                document.getElementById('edit-nome').value = "";
+                document.getElementById('edit-preco').value = "";
+                document.getElementById('edit-estoque').value = "";
+                document.getElementById('edit-minimo').value = "";
+                document.getElementById('edit-codigo').value = "";
+                document.getElementById('edit-img').value = "";
+                document.getElementById('modalEdit').style.display = 'flex';
+            }
 
-        function visualizar(id, nome) {
-            document.getElementById('v-nome').innerText = nome;
-            // Limpar dados anteriores para evitar que apareçam antes da nova carga
-            document.getElementById('v-itens').innerHTML = '<tr><td colspan="3" align="center">Carregando...</td></tr>';
-            document.getElementById('v-total').innerText = 'Total: R$ 0,00';
+            function abrirEdicao(cod) {
+                let p = estoqueCache.find(x => x.codigo === cod);
+                editingCode = cod;
+                document.getElementById('edit-title').innerText = "📝 Editar Produto";
+                document.getElementById('label-estoque').innerText = "Adicionar ao Estoque";
+                document.getElementById('edit-nome').value = p.nome;
+                document.getElementById('edit-categoria').value = p.categoria || "Bebida";
+                document.getElementById('edit-preco').value = p.preco;
+                document.getElementById('edit-estoque').value = 0;
+                document.getElementById('edit-minimo').value = p.minimo;
+                document.getElementById('edit-codigo').value = p.codigo;
+                document.getElementById('edit-img').value = p.imagem;
+                document.getElementById('modalEdit').style.display = 'flex';
+            }
 
-            google.script.run.withSuccessHandler(itens => {
-                let t = 0;
-                let produtos = itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
-                let pagamentos = itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
-
-                let html = produtos.map(i => {
-                    t += i.total;
-                    return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${i.total.toFixed(2)}</td></tr>`;
-                }).join('');
-
-                if (pagamentos.length > 0) {
-                    html += `<tr><td colspan="3" style="padding-top:10px; border-bottom:1px solid #000; font-weight:bold; font-size:10px;">PAGAMENTOS REALIZADOS:</td></tr>`;
-                    pagamentos.forEach(p => {
-                        t += p.total;
-                        html += `<tr style="color:#28a745"><td>${p.nome}</td><td></td><td align="right">R$ ${p.total.toFixed(2)}</td></tr>`;
-                    });
+            function salvarEdicao() {
+                let p = {
+                    codigo: document.getElementById('edit-codigo').value || null,
+                    nome: document.getElementById('edit-nome').value,
+                    categoria: document.getElementById('edit-categoria').value,
+                    preco: parseFloat(document.getElementById('edit-preco').value),
+                    estoque: parseFloat(document.getElementById('edit-estoque').value),
+                    minimo: parseFloat(document.getElementById('edit-minimo').value),
+                    imagem: document.getElementById('edit-img').value
+                };
+                if (!p.nome || isNaN(p.preco)) {
+                    alert("Preencha Nome e Preço!");
+                    return;
                 }
 
-                document.getElementById('v-itens').innerHTML = html || '<tr><td colspan="3" align="center">Vazio</td></tr>';
-                document.getElementById('v-total').innerText = 'Saldo Pendente: R$ ' + t.toFixed(2);
-                document.getElementById('modalVisualizar').style.display = 'flex';
-            }).buscarItensComanda(id);
-        }
+                mostrarCarregando("Salvando...");
+                const func = editingCode ? 'salvarEdicaoProduto' : 'adicionarProduto';
+                google.script.run.withSuccessHandler(() => {
+                    esconderCarregando(); fecharModais(); carregarEstoque();
+                })[func](p);
+            }
 
-        function buscarVD(v) {
-            let f = v ? estoqueCache.filter(p => p.nome.toLowerCase().includes(v.toLowerCase())) : estoqueCache;
-            document.getElementById('vd-drop').innerHTML = f.map(p => `
+            function visualizar(id, nome) {
+                document.getElementById('v-nome').innerText = nome;
+                // Limpar dados anteriores para evitar que apareçam antes da nova carga
+                document.getElementById('v-itens').innerHTML = '<tr><td colspan="3" align="center">Carregando...</td></tr>';
+                document.getElementById('v-total').innerText = 'Total: R$ 0,00';
+
+                google.script.run.withSuccessHandler(itens => {
+                    let t = 0;
+                    let produtos = itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
+                    let pagamentos = itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
+
+                    let html = produtos.map(i => {
+                        t += i.total;
+                        return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${i.total.toFixed(2)}</td></tr>`;
+                    }).join('');
+
+                    if (pagamentos.length > 0) {
+                        html += `<tr><td colspan="3" style="padding-top:10px; border-bottom:1px solid #000; font-weight:bold; font-size:10px;">PAGAMENTOS REALIZADOS:</td></tr>`;
+                        pagamentos.forEach(p => {
+                            t += p.total;
+                            html += `<tr style="color:#28a745"><td>${p.nome}</td><td></td><td align="right">R$ ${p.total.toFixed(2)}</td></tr>`;
+                        });
+                    }
+
+                    document.getElementById('v-itens').innerHTML = html || '<tr><td colspan="3" align="center">Vazio</td></tr>';
+                    document.getElementById('v-total').innerText = 'Saldo Pendente: R$ ' + t.toFixed(2);
+                    document.getElementById('modalVisualizar').style.display = 'flex';
+                }).buscarItensComanda(id);
+            }
+
+            function buscarVD(v) {
+                let f = v ? estoqueCache.filter(p => p.nome.toLowerCase().includes(v.toLowerCase())) : estoqueCache;
+                document.getElementById('vd-drop').innerHTML = f.map(p => `
                 <div style="padding:15px; cursor:pointer; border-bottom:1px solid var(--glass); display:flex; gap:10px; align-items:center;" onclick="addVD('${p.codigo}')">
                     <img src="${p.imagem}" style="width:40px; height:40px; border-radius:8px; object-fit:cover;">
                     <div><b>${p.nome}</b><br><small style="color:var(--primary)">R$ ${p.preco.toFixed(2)}</small></div>
                 </div>
             `).join('');
-            document.getElementById('vd-drop').style.display = 'block';
-        }
+                document.getElementById('vd-drop').style.display = 'block';
+            }
 
-        function addVD(cod) {
-            let p = estoqueCache.find(x => x.codigo === cod);
-            let item = carrinhoVD.find(x => x.codigo === cod);
-            if (item) item.qtd++; else carrinhoVD.push({ ...p, qtd: 1 });
-            renderVD(); document.getElementById('vd-drop').style.display = 'none';
-            document.getElementById('vd-busca').value = '';
-        }
+            function addVD(cod) {
+                let p = estoqueCache.find(x => x.codigo === cod);
+                let item = carrinhoVD.find(x => x.codigo === cod);
+                if (item) item.qtd++; else carrinhoVD.push({ ...p, qtd: 1 });
+                renderVD(); document.getElementById('vd-drop').style.display = 'none';
+                document.getElementById('vd-busca').value = '';
+            }
 
-        function renderVD() {
-            let t = 0;
-            document.querySelector('#vd-carrinho tbody').innerHTML = carrinhoVD.map(i => {
-                t += (i.preco * i.qtd);
-                return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${(i.preco * i.qtd).toFixed(2)}</td></tr>`;
-            }).join('');
-            document.getElementById('vd-total').innerText = 'R$ ' + t.toFixed(2);
-        }
+            function renderVD() {
+                let t = 0;
+                document.querySelector('#vd-carrinho tbody').innerHTML = carrinhoVD.map(i => {
+                    t += (i.preco * i.qtd);
+                    return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${(i.preco * i.qtd).toFixed(2)}</td></tr>`;
+                }).join('');
+                document.getElementById('vd-total').innerText = 'R$ ' + t.toFixed(2);
+            }
 
-        function finalizarVD() {
-            if (carrinhoVD.length === 0) return;
-            let m = document.getElementById('vd-pagamento').value;
-            if (!confirm(`Confirmar venda no ${m}?`)) return;
+            function finalizarVD() {
+                if (carrinhoVD.length === 0) return;
+                let m = document.getElementById('vd-pagamento').value;
+                if (!confirm(`Confirmar venda no ${m}?`)) return;
 
-            mostrarCarregando("Finalizando...");
-            let t = parseFloat(document.getElementById('vd-total').innerText.replace('R$ ', ''));
-            let dados = {
-                id: 'VD' + new Date().getTime(),
-                tipo: 'VENDA_DIRETA',
-                total: t,
-                forma: m,
-                pago: t,
-                troco: 0,
-                itens: carrinhoVD.map(it => ({
-                    codigo: it.codigo,
-                    nome: it.nome,
-                    qtd: it.qtd,
-                    preco: it.preco,
-                    total: it.preco * it.qtd
-                }))
-            };
-            google.script.run.withSuccessHandler(() => {
-                esconderCarregando();
-                carrinhoVD = [];
-                renderVD();
-                carregarDash();
-                carregarVDSerecente();
-                showToast("Venda Direta realizada com sucesso!", "success");
+                mostrarCarregando("Finalizando...");
+                let t = parseFloat(document.getElementById('vd-total').innerText.replace('R$ ', ''));
+                let dados = {
+                    id: 'VD' + new Date().getTime(),
+                    tipo: 'VENDA_DIRETA',
+                    total: t,
+                    forma: m,
+                    pago: t,
+                    troco: 0,
+                    itens: carrinhoVD.map(it => ({
+                        codigo: it.codigo,
+                        nome: it.nome,
+                        qtd: it.qtd,
+                        preco: it.preco,
+                        total: it.preco * it.qtd
+                    }))
+                };
+                google.script.run.withSuccessHandler(() => {
+                    esconderCarregando();
+                    carrinhoVD = [];
+                    renderVD();
+                    carregarDash();
+                    carregarVDSerecente();
+                    showToast("Venda Direta realizada com sucesso!", "success");
 
-                // Abrir recibo para impressão imediata
-                visualizarVD(dados.id, 'Venda Direta');
-            }).finalizarVenda(dados);
-        }
+                    // Abrir recibo para impressão imediata
+                    visualizarVD(dados.id, 'Venda Direta');
+                }).finalizarVenda(dados);
+            }
 
-        function carregarVDSerecente() {
-            google.script.run.withSuccessHandler(lista => {
-                let html = "";
-                // Somente VENDAS DIRETAS (ID começa com VD)
-                lista.filter(c => c.id && String(c.id).startsWith('VD')).slice(0, 10).forEach(v => {
-                    html += `
+            function carregarVDSerecente() {
+                google.script.run.withSuccessHandler(lista => {
+                    let html = "";
+                    // Somente VENDAS DIRETAS (ID começa com VD)
+                    lista.filter(c => c.id && String(c.id).startsWith('VD')).slice(0, 10).forEach(v => {
+                        html += `
                         <div class="comanda-item" onclick="visualizarVD('${v.id}', 'Venda Direta')">
                             <span class="status-badge" style="background:rgba(212,175,55,0.1); color:var(--primary)">DIRETA</span>
                             <b>${v.id}</b><br>
                             <span style="font-weight:700">R$ ${v.total.toFixed(2)}</span>
                             <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${v.dataExibicao}</div>
                         </div>`;
-                });
-                document.getElementById('lista-vd-hist').innerHTML = html || 'Sem vendas recentes.';
-            }).listarTodasComandas();
-        }
-
-        function visualizarVD(id, nome) {
-            document.getElementById('v-nome').innerText = nome + " #" + id;
-            document.getElementById('v-itens').innerHTML = '<tr><td colspan="3" align="center">Carregando...</td></tr>';
-            document.getElementById('v-total').innerText = 'Total: R$ 0,00';
-
-            google.script.run.withSuccessHandler(itens => {
-                let t = 0;
-                document.getElementById('v-itens').innerHTML = itens.map(i => {
-                    t += i.total;
-                    return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${i.total.toFixed(2)}</td></tr>`;
-                }).join('');
-                document.getElementById('v-total').innerText = 'Total: R$ ' + t.toFixed(2);
-                document.getElementById('modalVisualizar').style.display = 'flex';
-            }).buscarItensComanda(id);
-        }
-
-        function restaurarSistema() { if (confirm("CUIDADO: Isso limpa tudo. Continuar?")) google.script.run.withSuccessHandler(() => location.reload()).criarEstrutura(); }
-        function limparFiltro() {
-            document.getElementById('dash-inicio').value = '';
-            document.getElementById('dash-fim').value = '';
-            carregarDash();
-        }
-        function fecharModais() { document.querySelectorAll('.overlay').forEach(m => m.style.display = 'none'); }
-
-        function carregarTudo() {
-            carregarDash();
-            carregarEstoque();
-            carregarVDSerecente();
-            checarNotificacoes();
-        }
-
-
-
-        // Controle de Navegação do Portal
-        function irParaModulo(p) {
-            // Se estiver na Vercel, as páginas estão na mesma pasta
-            if (window.location.hostname !== 'script.google.com') {
-                window.location.href = p + ".html";
-            } else {
-                // Se estiver no Google, usa o parâmetro page
-                google.script.run.withSuccessHandler(url => {
-                    window.top.location.href = url + "?page=" + p;
-                }).getScriptUrl();
-            }
-        }
-
-        function irParaLogin() {
-            document.getElementById('view-portal').style.display = 'none';
-            document.getElementById('login-overlay').style.display = 'flex';
-            document.getElementById('login-pass').focus();
-        }
-
-        function voltarAoPortal() {
-            sessionStorage.removeItem('auth_admin');
-            document.getElementById('view-admin').style.display = 'none';
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('view-portal').style.display = 'flex';
-        }
-
-        function tentarLogin() {
-            const pass = document.getElementById('login-pass').value;
-            const btn = document.querySelector('.login-box button');
-            const err = document.getElementById('login-err');
-
-            if (!pass) return;
-
-            // Verificar se o ambiente do Google está disponível
-            if (typeof google === 'undefined' || !google.script) {
-                alert("AVISO: O sistema não detectou o ambiente do Google Apps Script. Se você está testando localmente ou na Vercel, a senha não poderá ser validada. Use o link oficial do Google Script (Execução).");
-                btn.innerHTML = 'ENTRAR';
-                btn.disabled = false;
-                return;
+                    });
+                    document.getElementById('lista-vd-hist').innerHTML = html || 'Sem vendas recentes.';
+                }).listarTodasComandas();
             }
 
-            btn.innerHTML = 'VALIDANDO...';
-            btn.disabled = true;
-            err.style.display = 'none';
+            function visualizarVD(id, nome) {
+                document.getElementById('v-nome').innerText = nome + " #" + id;
+                document.getElementById('v-itens').innerHTML = '<tr><td colspan="3" align="center">Carregando...</td></tr>';
+                document.getElementById('v-total').innerText = 'Total: R$ 0,00';
 
-            google.script.run
-                .withSuccessHandler(res => {
-                    if (res.sucesso) {
-                        sessionStorage.setItem('auth_admin', 'true');
-                        document.getElementById('login-overlay').style.display = 'none';
-                        document.getElementById('view-admin').style.display = 'block';
-                        carregarTudo();
-                    } else {
-                        btn.innerHTML = 'ENTRAR';
-                        btn.disabled = false;
-                        err.style.display = 'block';
-                        document.getElementById('login-pass').value = '';
-                    }
-                })
-                .withFailureHandler(e => {
+                google.script.run.withSuccessHandler(itens => {
+                    let t = 0;
+                    document.getElementById('v-itens').innerHTML = itens.map(i => {
+                        t += i.total;
+                        return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${i.total.toFixed(2)}</td></tr>`;
+                    }).join('');
+                    document.getElementById('v-total').innerText = 'Total: R$ ' + t.toFixed(2);
+                    document.getElementById('modalVisualizar').style.display = 'flex';
+                }).buscarItensComanda(id);
+            }
+
+            function restaurarSistema() { if (confirm("CUIDADO: Isso limpa tudo. Continuar?")) google.script.run.withSuccessHandler(() => location.reload()).criarEstrutura(); }
+            function limparFiltro() {
+                document.getElementById('dash-inicio').value = '';
+                document.getElementById('dash-fim').value = '';
+                carregarDash();
+            }
+            function fecharModais() { document.querySelectorAll('.overlay').forEach(m => m.style.display = 'none'); }
+
+            function carregarTudo() {
+                carregarDash();
+                carregarEstoque();
+                carregarVDSerecente();
+                checarNotificacoes();
+            }
+
+
+
+            // Controle de Navegação do Portal
+            function irParaModulo(p) {
+                // Se estiver na Vercel, as páginas estão na mesma pasta
+                if (window.location.hostname !== 'script.google.com') {
+                    window.location.href = p + ".html";
+                } else {
+                    // Se estiver no Google, usa o parâmetro page
+                    google.script.run.withSuccessHandler(url => {
+                        window.top.location.href = url + "?page=" + p;
+                    }).getScriptUrl();
+                }
+            }
+
+            function irParaLogin() {
+                document.getElementById('view-portal').style.display = 'none';
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('login-pass').focus();
+            }
+
+            function voltarAoPortal() {
+                sessionStorage.removeItem('auth_admin');
+                document.getElementById('view-admin').style.display = 'none';
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('view-portal').style.display = 'flex';
+            }
+
+            function tentarLogin() {
+                const pass = document.getElementById('login-pass').value;
+                const btn = document.querySelector('.login-box button');
+                const err = document.getElementById('login-err');
+
+                if (!pass) return;
+
+                // Verificar se o ambiente do Google está disponível
+                if (typeof google === 'undefined' || !google.script) {
+                    alert("AVISO: O sistema não detectou o ambiente do Google Apps Script. Se você está testando localmente ou na Vercel, a senha não poderá ser validada. Use o link oficial do Google Script (Execução).");
                     btn.innerHTML = 'ENTRAR';
                     btn.disabled = false;
-                    alert("Erro no servidor: " + e.message);
-                })
-                .verificarSenha(pass, 'admin');
-        }
+                    return;
+                }
 
-        window.onload = () => {
-            if (sessionStorage.getItem('auth_admin') === 'true') {
-                document.getElementById('view-portal').style.display = 'none';
-                document.getElementById('view-admin').style.display = 'block';
-                carregarTudo();
-            } else {
-                document.getElementById('view-portal').style.display = 'flex';
-                document.getElementById('view-admin').style.display = 'none';
+                btn.innerHTML = 'VALIDANDO...';
+                btn.disabled = true;
+                err.style.display = 'none';
+
+                google.script.run
+                    .withSuccessHandler(res => {
+                        if (res.sucesso) {
+                            sessionStorage.setItem('auth_admin', 'true');
+                            document.getElementById('login-overlay').style.display = 'none';
+                            document.getElementById('view-admin').style.display = 'block';
+                            carregarTudo();
+                        } else {
+                            btn.innerHTML = 'ENTRAR';
+                            btn.disabled = false;
+                            err.style.display = 'block';
+                            document.getElementById('login-pass').value = '';
+                        }
+                    })
+                    .withFailureHandler(e => {
+                        btn.innerHTML = 'ENTRAR';
+                        btn.disabled = false;
+                        alert("Erro no servidor: " + e.message);
+                    })
+                    .verificarSenha(pass, 'admin');
             }
 
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW registrado', reg))
-                    .catch(err => console.log('Erro SW', err));
-            }
-        };
-    </script>
+            window.onload = () => {
+                if (sessionStorage.getItem('auth_admin') === 'true') {
+                    document.getElementById('view-portal').style.display = 'none';
+                    document.getElementById('view-admin').style.display = 'block';
+                    carregarTudo();
+                } else {
+                    document.getElementById('view-portal').style.display = 'flex';
+                    document.getElementById('view-admin').style.display = 'none';
+                }
+
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(reg => console.log('SW registrado', reg))
+                        .catch(err => console.log('Erro SW', err));
+                }
+
+                let deferredPrompt;
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    document.getElementById('pwa-install-banner').style.display = 'flex';
+                });
+
+                document.getElementById('btn-pwa-install')?.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            document.getElementById('pwa-install-banner').style.display = 'none';
+                        }
+                        deferredPrompt = null;
+                    }
+                });
+            };
+        </script>
 </body>
 
 </html>

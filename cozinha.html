@@ -356,22 +356,38 @@
         <span><i class="fab fa-whatsapp"></i> (87) 9 8143-6052</span>
     </div>
 
+    <div id="pwa-install-banner">
+        <div class="pwa-icon"><i class="fas fa-mobile-alt"></i></div>
+        <div class="pwa-text">
+            <h4>Instalar App Cozinha</h4>
+            <p id="pwa-desc">Adicione à tela de início para acesso rápido à cozinha.</p>
+        </div>
+        <button id="btn-pwa-install" class="btn-install">INSTALAR</button>
+        <button class="btn-close-pwa"
+            onclick="document.getElementById('pwa-install-banner').style.display='none'">✕</button>
+    </div>
 
 
-    <header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;">
-        <div style="flex: 1;"></div>
-        <h1 style="color: var(--primary); letter-spacing: 1px; flex: 2; text-align: center; font-size: 1.2rem;">🍳
-            COZINHA - A GARAGEM</h1>
-        <div
-            style="flex: 1; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
-            <div id="loader" style="font-size: 0.8rem; color: var(--accent); display: none;">Atualizando...</div>
+
+    <header
+        style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background: rgba(13, 13, 18, 0.95); border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100;">
+        <div style="display:flex; align-items:center;">
+            <button onclick="voltarAoPortal()"
+                style="background: var(--primary); color: #fff; border: none; padding: 10px 18px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(165, 0, 0, 0.3);"
+                title="Voltar ao Início">
+                <i class="fas fa-arrow-left"></i> VOLTAR
+            </button>
+        </div>
+        <h1
+            style="color: var(--primary); letter-spacing: 1px; flex: 2; text-align: center; font-size: 1.2rem; font-weight: 800;">
+            🍳 COZINHA</h1>
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
             <button id="btn-sound-toggle" onclick="toggleSound()"
-                style="background: var(--glass); border: 1px solid var(--accent); color: var(--accent); padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: 700;">
-                <i class="fas fa-volume-mute" id="sound-icon"></i> SOM
+                style="background: var(--glass); border: 1px solid var(--accent); color: var(--accent); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.8rem;">
+                <i class="fas fa-volume-mute" id="sound-icon"></i>
             </button>
             <button onclick="carregarPedidos()"
-                style="background: var(--glass); border: 1px solid var(--accent); color: var(--accent); padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: 700;">🔄
-                RECARREGAR</button>
+                style="background: var(--glass); border: 1px solid var(--accent); color: var(--accent); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.8rem;">🔄</button>
         </div>
     </header>
 
@@ -404,6 +420,16 @@
 
         let soundEnabled = false;
         let lastOrderCount = 0;
+
+        function voltarAoPortal() {
+            if (window.location.hostname !== 'script.google.com') {
+                window.location.href = "index.html";
+            } else {
+                google.script.run.withSuccessHandler(url => {
+                    window.top.location.href = url;
+                }).getScriptUrl();
+            }
+        }
 
         window.onload = function () {
             carregarPedidos();
@@ -539,6 +565,24 @@
                 .then(reg => console.log('SW registrado', reg))
                 .catch(err => console.log('Erro SW', err));
         }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwa-install-banner').style.display = 'flex';
+        });
+
+        document.getElementById('btn-pwa-install')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('pwa-install-banner').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
     </script>
 </body>
 

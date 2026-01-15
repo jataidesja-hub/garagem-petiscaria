@@ -28,7 +28,9 @@ function doGet(e) {
   let page = e.parameter && e.parameter.page;
   
   if (page === 'manifest') {
-    return HtmlService.createTemplateFromFile('manifest').evaluate()
+    let type = e.parameter.type;
+    let file = type === 'cozinha' ? 'manifest-cozinha' : 'manifest';
+    return HtmlService.createTemplateFromFile(file).evaluate()
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .setMimeType(HtmlService.MimeType.JSON);
   }
@@ -228,7 +230,7 @@ function abrirNovaComanda(nome) {
   return id;
 }
 
-function adicionarItemComanda(idComanda, cod) {
+function adicionarItemComanda(idComanda, cod, obs) {
   if (!idComanda || !cod) return {sucesso: false, erro: "Dados incompletos"};
   
   const shEst = getOrCreateSheet(ABA_ESTOQUE);
@@ -249,7 +251,7 @@ function adicionarItemComanda(idComanda, cod) {
     produto[5], 
     produto[5], 
     0, 
-    '', 
+    obs || '', 
     cat, 
     'PENDENTE', 
     new Date()
