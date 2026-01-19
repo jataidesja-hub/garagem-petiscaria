@@ -960,9 +960,13 @@
                 google.script.run.withSuccessHandler(lista => {
                     if (!Array.isArray(lista)) return;
                     let html = "";
-                    lista.forEach(c => {
+                    lista.forEach(c => {                            // Definir estilo se for antiga
+                        let estiloAntiga = c.isAntiga ? 'border-left: 3px solid #ff9800;' : '';
+                        let iconAntiga = c.isAntiga ? '<i class="fas fa-clock" title="Aberta em data anterior" style="color:#ff9800; float:right; font-size:0.8rem;"></i>' : '';
+
                         html += `
-                            <div class="comanda-item" onclick="visualizar('${c.id}', '${c.nome}')">
+                            <div class="comanda-item" onclick="visualizar('${c.id}', '${c.nome}')" style="${estiloAntiga}">
+                                ${iconAntiga}
                                 <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
                                 <b>${c.nome}</b><br>
                                 <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${c.total.toFixed(2)}</span>

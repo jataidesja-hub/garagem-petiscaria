@@ -172,15 +172,30 @@ function listarTodasComandas(dataInicio, dataFim) {
     
     let dataFormatada = "";
     let dataParaFiltro = "";
+    let isAntiga = false;
     try { 
       let d = new Date(r[3]);
       dataFormatada = Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy HH:mm");
       dataParaFiltro = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd"); 
+      // Se a data da comanda for menor que hoje, é antiga
+      if (dataParaFiltro < hoje) isAntiga = true;
     } catch(e) { }
     
-    return { id: id, nome: r[1], data: dataParaFiltro, dataExibicao: dataFormatada, status: status, total: totalComanda };
+    return { 
+      id: id, 
+      nome: r[1], 
+      data: dataParaFiltro, 
+      dataExibicao: dataFormatada, 
+      status: status, 
+      total: totalComanda,
+      isAntiga: isAntiga 
+    };
   }).filter(comanda => {
-    // Filtrar por período de datas
+    // REGRA DE FILTRO:
+    // 1. Se estiver ABERTA, mostra sempre (independente da data)
+    // 2. Se estiver FECHADA ou outro status, valida o filtro de data
+    if (comanda.status === 'ABERTA') return true;
+    
     if (!comanda.data) return false;
     return comanda.data >= inicio && comanda.data <= fim;
   });
@@ -452,7 +467,8 @@ function getDashboardData(inicio, fim) {
       }
 
       // 2. Séries temporais (se for período de 1 dia ou hoje, agrupa por hora)
-      if (inicio === fim || !inicio) {
+      if (!inicio || inicio === fim) { 
+        // Se não tem data ou se é o mesmo dia (ex: filtro de hoje), preenche o gráfico
         seriesHoras[hora] = (seriesHoras[hora] || 0) + t;
       }
 

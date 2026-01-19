@@ -981,13 +981,17 @@
                         Nenhuma mesa ${statusTabAtiva === 'ABERTA' ? 'aberta' : 'fechada'} no momento.
                     </div>`;
                 } else {
-                    grid.innerHTML = filtered.map(c => `
-                        <div class="comanda-card" onclick="abrirDetalhes('${c.id}', '${c.nome}', '${c.status}')" style="animation: fadeIn 0.3s ease-out forwards;">
-                            <b>${c.nome}</b><br>
+                    grid.innerHTML = filtered.map(c => {
+                        let alertaAntiga = c.isAntiga ? '<i class="fas fa-exclamation-circle" style="color:orange; margin-left:5px;" title="Aberta anteriormente"></i>' : '';
+                        let styleAntiga = c.isAntiga ? 'border: 1px solid rgba(255, 152, 0, 0.3);' : '';
+
+                        return `
+                        <div class="comanda-card" onclick="abrirDetalhes('${c.id}', '${c.nome}', '${c.status}')" style="animation: fadeIn 0.3s ease-out forwards; ${styleAntiga}">
+                            <b>${c.nome}</b> ${alertaAntiga}<br>
                             <span style="color:var(--primary); font-weight:700">R$ ${c.total.toFixed(2)}</span>
                             <br><small style="font-size: 0.6rem; color: var(--text-muted)">${c.dataExibicao}</small>
                         </div>
-                    `).join('');
+                    `}).join('');
                 }
 
                 // Se o modal de detalhes estiver aberto e estivermos em background, atualiza os itens
