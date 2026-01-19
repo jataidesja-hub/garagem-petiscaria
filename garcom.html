@@ -596,6 +596,21 @@
             <button id="tab-fechadas" class="cat-btn" style="flex:1"
                 onclick="switchMainTab('FECHADA')">FECHADAS</button>
         </div>
+
+        <!-- Filtro de Data para Comandas Fechadas -->
+        <div id="filtro-data-container"
+            style="display:none; margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 15px; border: 1px solid var(--glass);">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <label style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">📅 Filtrar por
+                    data:</label>
+                <input type="date" id="filtro-data"
+                    style="flex: 1; min-width: 150px; padding: 0.8rem; margin: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--primary); border-radius: 10px; color: var(--primary); font-weight: 600;"
+                    onchange="carregarComandas()">
+                <button class="btn btn-outline" onclick="limparFiltroData()"
+                    style="padding: 0.8rem 1.2rem; font-size: 0.85rem;">Hoje</button>
+            </div>
+        </div>
+
         <button id="btn-nova-mesa" class="btn btn-primary" onclick="abrirModalNova()">➕ ABRIR NOVA MESA</button>
         <div id="lista-comandas" class="comanda-grid"></div>
     </div>
@@ -911,6 +926,19 @@
             document.getElementById('tab-abertas').classList.toggle('active', status === 'ABERTA');
             document.getElementById('tab-fechadas').classList.toggle('active', status === 'FECHADA');
             document.getElementById('btn-nova-mesa').style.display = status === 'ABERTA' ? 'flex' : 'none';
+
+            // Mostrar filtro de data apenas na aba FECHADAS
+            const filtroContainer = document.getElementById('filtro-data-container');
+            if (status === 'FECHADA') {
+                filtroContainer.style.display = 'block';
+                // Definir data de hoje como padrão
+                if (!document.getElementById('filtro-data').value) {
+                    document.getElementById('filtro-data').value = new Date().toISOString().split('T')[0];
+                }
+            } else {
+                filtroContainer.style.display = 'none';
+            }
+
             carregarComandas();
         }
 
@@ -928,6 +956,18 @@
                     <div class="skeleton-card skeleton"></div>
                     <div class="skeleton-card skeleton"></div>
                 `;
+            }
+
+            // Obter data do filtro se estiver na aba FECHADAS
+            let dataInicio = null;
+            let dataFim = null;
+
+            if (statusTabAtiva === 'FECHADA') {
+                const filtroData = document.getElementById('filtro-data').value;
+                if (filtroData) {
+                    dataInicio = filtroData;
+                    dataFim = filtroData;
+                }
             }
 
             google.script.run.withSuccessHandler(lista => {
@@ -955,7 +995,7 @@
                 if (isBackground && document.getElementById('modalDetalhes').style.display === 'flex') {
                     atualizarItens(statusTabAtiva === 'FECHADA', true);
                 }
-            }).listarTodasComandas();
+            }).listarTodasComandas(dataInicio, dataFim);
         }
 
         function carregarProdutos() { google.script.run.withSuccessHandler(d => { estoqueCache = d; renderDrop(d); }).listarEstoque(); }
@@ -1315,6 +1355,12 @@
             mostrarCarregando("Abrindo...");
             google.script.run.withSuccessHandler(() => { mostrarFinalizado("Aberta!", () => fecharModais()); }).abrirNovaComanda(n);
         }
+
+        function limparFiltroData() {
+            document.getElementById('filtro-data').value = new Date().toISOString().split('T')[0];
+            carregarComandas();
+        }
+
         function ajustarCampos() { recalcParcial(); }
         // LÓGICA PWA
         let deferredPrompt;

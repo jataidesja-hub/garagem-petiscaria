@@ -956,26 +956,21 @@
                 const inicio = document.getElementById('dash-inicio').value;
                 const fim = document.getElementById('dash-fim').value;
 
+                // Passar datas ao backend - se vazio, backend usará hoje
                 google.script.run.withSuccessHandler(lista => {
                     if (!Array.isArray(lista)) return;
                     let html = "";
                     lista.forEach(c => {
-                        let match = true;
-                        if (inicio && c.data < inicio) match = false;
-                        if (fim && c.data > fim) match = false;
-
-                        if (match) {
-                            html += `
+                        html += `
                             <div class="comanda-item" onclick="visualizar('${c.id}', '${c.nome}')">
                                 <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
                                 <b>${c.nome}</b><br>
                                 <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${c.total.toFixed(2)}</span>
                                 <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${c.dataExibicao}</div>
                             </div>`;
-                        }
                     });
                     document.getElementById('lista-comandas-hist').innerHTML = html || 'Sem dados.';
-                }).listarTodasComandas();
+                }).listarTodasComandas(inicio, fim);
 
                 google.script.run.withSuccessHandler(d => {
                     document.getElementById('d-total').innerText = 'R$ ' + d.totalVendido.toFixed(2);
@@ -1217,6 +1212,8 @@
             }
 
             function carregarVDSerecente() {
+                // Buscar apenas vendas do dia atual
+                const hoje = new Date().toISOString().split('T')[0];
                 google.script.run.withSuccessHandler(lista => {
                     let html = "";
                     // Somente VENDAS DIRETAS (ID começa com VD)
@@ -1230,7 +1227,7 @@
                         </div>`;
                     });
                     document.getElementById('lista-vd-hist').innerHTML = html || 'Sem vendas recentes.';
-                }).listarTodasComandas();
+                }).listarTodasComandas(hoje, hoje);
             }
 
             function visualizarVD(id, nome) {

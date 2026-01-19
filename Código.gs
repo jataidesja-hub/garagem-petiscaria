@@ -146,12 +146,17 @@ function adicionarProduto(p) {
   return { sucesso: true };
 }
 
-function listarTodasComandas() {
+function listarTodasComandas(dataInicio, dataFim) {
   const sh = getOrCreateSheet(ABA_COMANDAS);
   const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
   const data = sh.getDataRange().getValues();
   const itens = shItens.getDataRange().getValues();
   if (data.length < 2) return [];
+  
+  // Se não passar datas, considera apenas o dia atual
+  const hoje = Utilities.formatDate(new Date(), "GMT-3", "yyyy-MM-dd");
+  const inicio = dataInicio || hoje;
+  const fim = dataFim || hoje;
   
   return data.slice(1).reverse().map(r => {
     let id = String(r[0]);
@@ -174,6 +179,10 @@ function listarTodasComandas() {
     } catch(e) { }
     
     return { id: id, nome: r[1], data: dataParaFiltro, dataExibicao: dataFormatada, status: status, total: totalComanda };
+  }).filter(comanda => {
+    // Filtrar por período de datas
+    if (!comanda.data) return false;
+    return comanda.data >= inicio && comanda.data <= fim;
   });
 }
 
