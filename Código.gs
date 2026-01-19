@@ -8,7 +8,7 @@ const ABA_COMANDAS      = 'Comandas';
 const ABA_COMANDA_ITENS = 'ComandaItens';
 
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('🍺 A GARAGEM')
+  SpreadsheetApp.getUi().createMenu('🚀 DEMONSTRAÇÃO')
     .addItem('Restaurar Estrutura e Exemplos', 'criarEstrutura')
     .addItem('Ver Link do Garçom', 'mostrarLinkGarcom')
     .addToUi();
@@ -43,7 +43,7 @@ function doGet(e) {
 
   let pagina = (page === 'garcom') ? 'garcom' : (page === 'cozinha' ? 'cozinha' : 'index');
   return HtmlService.createTemplateFromFile(pagina).evaluate()
-    .setTitle('A GARAGEM PETISCARIA')
+    .setTitle('DEMONSTRAÇÃO SISTEMA')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
 }

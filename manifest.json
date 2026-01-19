@@ -1,7 +1,7 @@
 {
-  "name": "Garçom - A Garagem",
+  "name": "Garçom - Demonstração",
   "short_name": "Garçom",
-  "description": "Lançamento de Pedidos - A Garagem",
+  "description": "Lançamento de Pedidos - Demonstração",
   "start_url": "/garcom.html",
   "display": "standalone",
   "background_color": "#050508",

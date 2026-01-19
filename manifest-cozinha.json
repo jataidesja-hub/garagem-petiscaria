@@ -1,7 +1,7 @@
 {
-    "name": "Cozinha - A Garagem",
+    "name": "Cozinha - Demonstração",
     "short_name": "Cozinha",
-    "description": "Painel de Preparo - A Garagem",
+    "description": "Painel de Preparo - Demonstração",
     "start_url": "/cozinha.html",
     "display": "standalone",
     "background_color": "#050508",
