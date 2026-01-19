@@ -639,6 +639,8 @@
                         <input type="date" id="dash-inicio" style="width:auto; margin:0" onchange="carregarDash()">
                         <b>Fim:</b>
                         <input type="date" id="dash-fim" style="width:auto; margin:0" onchange="carregarDash()">
+                        <button class="btn btn-outline" onclick="setFiltroHoje()">Hoje</button>
+                        <button class="btn btn-outline" onclick="setFiltroMes()">Mês Atual</button>
                         <button class="btn btn-outline" onclick="limparFiltro()">Limpar</button>
                     </div>
                 </div>
@@ -1251,6 +1253,26 @@
             }
 
             function restaurarSistema() { if (confirm("CUIDADO: Isso limpa tudo. Continuar?")) google.script.run.withSuccessHandler(() => location.reload()).criarEstrutura(); }
+            function setFiltroHoje() {
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('dash-inicio').value = hoje;
+                document.getElementById('dash-fim').value = hoje;
+                carregarDash();
+            }
+
+            function setFiltroMes() {
+                const date = new Date();
+                const ano = date.getFullYear();
+                const mes = String(date.getMonth() + 1).padStart(2, '0');
+                const inicio = `${ano}-${mes}-01`;
+                const ultimoDia = new Date(ano, date.getMonth() + 1, 0).getDate();
+                const fim = `${ano}-${mes}-${ultimoDia}`;
+
+                document.getElementById('dash-inicio').value = inicio;
+                document.getElementById('dash-fim').value = fim;
+                carregarDash();
+            }
+
             function limparFiltro() {
                 document.getElementById('dash-inicio').value = '';
                 document.getElementById('dash-fim').value = '';
