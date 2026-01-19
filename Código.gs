@@ -153,10 +153,10 @@ function listarTodasComandas(dataInicio, dataFim) {
   const itens = shItens.getDataRange().getValues();
   if (data.length < 2) return [];
   
-  // Se não passar datas, considera apenas o dia atual
+  // Se não passar datas (null, undefined ou vazio), considera apenas o dia atual
   const hoje = Utilities.formatDate(new Date(), "GMT-3", "yyyy-MM-dd");
-  const inicio = dataInicio || hoje;
-  const fim = dataFim || hoje;
+  const inicio = (dataInicio && dataInicio !== '') ? dataInicio : hoje;
+  const fim = (dataFim && dataFim !== '') ? dataFim : hoje;
   
   return data.slice(1).reverse().map(r => {
     let id = String(r[0]);

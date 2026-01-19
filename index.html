@@ -1255,6 +1255,11 @@
             function fecharModais() { document.querySelectorAll('.overlay').forEach(m => m.style.display = 'none'); }
 
             function carregarTudo() {
+                // Setar data de hoje por padrão nos filtros
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('dash-inicio').value = hoje;
+                document.getElementById('dash-fim').value = hoje;
+
                 carregarDash();
                 carregarEstoque();
                 carregarVDSerecente();
