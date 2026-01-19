@@ -43,7 +43,7 @@ function doGet(e) {
 
   let pagina = (page === 'garcom') ? 'garcom' : (page === 'cozinha' ? 'cozinha' : 'index');
   return HtmlService.createTemplateFromFile(pagina).evaluate()
-    .setTitle('DEMONSTRAÇÃO SISTEMA')
+    .setTitle('DEMONSTRAÇÃO')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
 }

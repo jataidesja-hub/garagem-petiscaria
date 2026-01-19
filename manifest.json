@@ -1,19 +1,19 @@
 {
-  "name": "Sistema - Demonstração",
-  "short_name": "Demonstração",
-  "description": "Portal de Acesso - Demonstração",
+  "name": "DEMONSTRAÇÃO",
+  "short_name": "DEMONSTRAÇÃO",
+  "description": "Portal de Acesso - DEMONSTRAÇÃO",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#050508",
   "theme_color": "#2196F3",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1042/1042304.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/4862/4862562.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1042/1042304.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/4862/4862562.png",
       "sizes": "512x512",
       "type": "image/png"
     }
