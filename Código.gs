@@ -613,20 +613,31 @@ function getNotificacoesCozinha() {
   comData.slice(1).forEach(r => mesaMap[String(r[0])] = r[1]);
   
   const agora = new Date().getTime();
-  const limite = agora - 60000; // Último 1 minuto
+  const limite = agora - (5 * 60 * 1000); // Últimos 5 minutos (evita perda por drift de relógio)
   
-  return itensData.slice(1)
-    .filter(r => {
-      let status = String(r[9] || '').toUpperCase().trim();
-      let ts = r[10] instanceof Date ? r[10].getTime() : 0;
-      return status === 'PRONTO' && ts > limite;
-    })
-    .map(r => ({
-      idComanda: String(r[0]),
-      mesa: mesaMap[String(r[0])] || '?',
-      nome: String(r[2]),
-      qtd: Number(r[3])
-    }));
+  let resultado = [];
+  for (let i = 1; i < itensData.length; i++) {
+    let r = itensData[i];
+    let status = String(r[9] || '').toUpperCase().trim();
+    
+    // Tentar converter o timestamp de várias formas
+    let tsRaw = r[10];
+    let ts = 0;
+    if (tsRaw instanceof Date) ts = tsRaw.getTime();
+    else if (!isNaN(new Date(tsRaw).getTime())) ts = new Date(tsRaw).getTime();
+
+    if (status === 'PRONTO' && ts > limite) {
+      resultado.push({
+        rowIndex: i + 1,
+        idComanda: String(r[0]),
+        mesa: mesaMap[String(r[0])] || '?',
+        nome: String(r[2]),
+        qtd: Number(r[3]),
+        timestamp: ts
+      });
+    }
+  }
+  return resultado;
 }
 
 function marcarPedidoPronto(rowIndex) {

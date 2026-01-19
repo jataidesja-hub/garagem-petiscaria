@@ -1346,7 +1346,7 @@
             google.script.run.withSuccessHandler(lista => {
                 if (!Array.isArray(lista)) return;
                 lista.forEach(n => {
-                    let key = n.idComanda + n.nome + n.qtd;
+                    let key = n.rowIndex + "_" + n.idComanda + "_" + (n.timestamp || "");
                     if (!notificacoesJaVistas.has(key)) {
                         notificacoesJaVistas.add(key);
 
@@ -1363,7 +1363,9 @@
                         }
                     }
                 });
-            }).getNotificacoesCozinha();
+            })
+                .withFailureHandler(err => console.error("Erro ao buscar notificações:", err))
+                .getNotificacoesCozinha();
         }
 
         let audioPronto = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
