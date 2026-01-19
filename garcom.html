@@ -582,9 +582,9 @@
             </button>
             <span style="font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: 1px;">🚀 DEMONSTRAÇÃO</span>
         </div>
-        <button onclick="carregarComandas(); carregarProdutos();"
+        <button onclick="desbloquearAudio(); carregarComandas(); carregarProdutos();"
             style="background:rgba(255,255,255,0.05); border:1px solid var(--glass); color:var(--primary); padding:8px; border-radius:10px; cursor:pointer;"
-            title="Sincronizar">
+            title="Sincronizar/Ativar Som">
             <i class="fas fa-sync-alt" id="sync-icon"></i>
         </button>
     </header>
@@ -863,7 +863,15 @@
 
         window.onload = function () {
             iniciarApp();
-            // Sincronização automática a cada 15 segundos
+
+            // Solicitar permissão para notificações do sistema
+            if ("Notification" in window) {
+                if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
+            }
+
+            // Sincronização automática a cada 10 segundos
             setInterval(() => {
                 verificarNotificacoes();
                 if (document.getElementById('modalPagamento').style.display !== 'flex' &&
@@ -871,7 +879,7 @@
                     document.getElementById('wrapper-search').style.display !== 'block') {
                     carregarComandas(true);
                 }
-            }, 10000); // Reduzido para 10s para notificações mais rápidas
+            }, 10000);
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js')
@@ -1341,16 +1349,34 @@
                     let key = n.idComanda + n.nome + n.qtd;
                     if (!notificacoesJaVistas.has(key)) {
                         notificacoesJaVistas.add(key);
-                        showToast(`🍽️ PRONTO: ${n.qtd}x ${n.nome} para a mesa ${n.mesa}`, "success");
+
+                        const msg = `🍽️ PRONTO: ${n.qtd}x ${n.nome} para a mesa ${n.mesa}`;
+                        showToast(msg, "success");
                         executarSomNotificacao();
+
+                        // Notificação de Sistema (Barra de Notificação)
+                        if ("Notification" in window && Notification.permission === "granted") {
+                            new Notification("Pedido Pronto! 🚀", {
+                                body: msg,
+                                icon: "https://cdn-icons-png.flaticon.com/512/4862/4862562.png"
+                            });
+                        }
                     }
                 });
             }).getNotificacoesCozinha();
         }
 
+        let audioPronto = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
         function executarSomNotificacao() {
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            audio.play().catch(e => console.log("Som bloqueado pelo navegador"));
+            audioPronto.play().catch(e => console.log("Som bloqueado: ", e));
+        }
+
+        // Função para desbloquear áudio em navegadores mobile
+        function desbloquearAudio() {
+            audioPronto.play().then(() => {
+                audioPronto.pause();
+                audioPronto.currentTime = 0;
+            }).catch(e => console.log("Aguardando interação para áudio"));
         }
 
         function confirmarNova() {
