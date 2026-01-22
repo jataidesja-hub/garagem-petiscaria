@@ -939,9 +939,8 @@
             const filtroContainer = document.getElementById('filtro-data-container');
             if (status === 'FECHADA') {
                 filtroContainer.style.display = 'block';
-                // Definir data de hoje como padrão SEMPRE que mudar para aba fechadas
-                const d = new Date();
-                const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                // Definir data de hoje como padrão SEMPRE que mudar para aba fechadas (Salvador/BA)
+                const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
                 document.getElementById('filtro-data').value = hoje;
             } else {
                 filtroContainer.style.display = 'none';
@@ -1389,8 +1388,7 @@
         }
 
         function limparFiltroData() {
-            const d = new Date();
-            const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
             document.getElementById('filtro-data').value = hoje;
             carregarComandas();
         }

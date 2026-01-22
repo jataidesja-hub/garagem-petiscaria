@@ -660,9 +660,18 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <h3>📋 Comandas & Vendas Recentes</h3>
-                    <div class="comanda-grid" id="lista-comandas-hist"></div>
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin:0">📋 Comandas & Vendas Recentes</h3>
+                        <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.8rem;"
+                            onclick="toggleComandas()">
+                            <span id="txt-toggle">Recolher</span> <i id="icon-toggle" class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                    <div id="container-comandas-hist">
+                        <div id="lista-comandas-hist" class="comanda-grid" style="margin-top: 1rem;"></div>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -1254,12 +1263,31 @@
             }
 
             function restaurarSistema() { if (confirm("CUIDADO: Isso limpa tudo. Continuar?")) google.script.run.withSuccessHandler(() => location.reload()).criarEstrutura(); }
+            function getHojeBA() {
+                return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
+            }
+
             function setFiltroHoje() {
-                const d = new Date();
-                const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                const hoje = getHojeBA();
                 document.getElementById('dash-inicio').value = hoje;
                 document.getElementById('dash-fim').value = hoje;
                 carregarDash();
+            }
+
+            function toggleComandas() {
+                const container = document.getElementById('container-comandas-hist');
+                const btnTxt = document.getElementById('txt-toggle');
+                const btnIcon = document.getElementById('icon-toggle');
+
+                if (container.style.display === 'none') {
+                    container.style.display = 'block';
+                    btnTxt.innerText = 'Recolher';
+                    btnIcon.className = 'fas fa-chevron-up';
+                } else {
+                    container.style.display = 'none';
+                    btnTxt.innerText = 'Expandir';
+                    btnIcon.className = 'fas fa-chevron-down';
+                }
             }
 
             function setFiltroMes() {
@@ -1283,9 +1311,8 @@
             function fecharModais() { document.querySelectorAll('.overlay').forEach(m => m.style.display = 'none'); }
 
             function carregarTudo() {
-                // Setar data de hoje por padrão nos filtros (Horário Local Brasil)
-                const d = new Date();
-                const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                // Setar data de hoje por padrão nos filtros (Salvador/BA)
+                const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
                 document.getElementById('dash-inicio').value = hoje;
                 document.getElementById('dash-fim').value = hoje;
 
