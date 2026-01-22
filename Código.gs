@@ -372,10 +372,13 @@ function finalizarVenda(dados) {
 
         // No histórico de comandas, queremos ver o valor TOTAL da conta fechada
         shCom.getRange(rowIndex, 5, 1, 7).setValues([['FECHADA', consumoReal, 0, consumoReal, dados.forma, consumoReal, dados.troco]]);
+        if (dados.cliente) {
+          shCom.getRange(rowIndex, 3).setValue(dados.cliente);
+        }
       }
     } else if (dados.tipo === "VENDA_DIRETA") {
       // Registrar Venda Direta como uma comanda já fechada no histórico
-      shCom.appendRow([idStr, "Venda Direta", "Balcão", new Date(), "FECHADA", dados.total, 0, dados.total, dados.forma, dados.total, dados.troco]);
+      shCom.appendRow([idStr, "Venda Direta", dados.cliente || "Balcão", new Date(), "FECHADA", dados.total, 0, dados.total, dados.forma, dados.total, dados.troco]);
     }
 
     return { sucesso: true };
@@ -527,6 +530,29 @@ function getDashboardData(inicio, fim) {
     mediaDiaria: categorias[cat].qtd / numDias
   })).sort((a, b) => b.qtd - a.qtd);
 
+  // LISTAGEM DE FIADOS (Dívidas ativas)
+  const shCom = getOrCreateSheet(ABA_COMANDAS);
+  const dataCom = shCom.getDataRange().getValues();
+  const hojeNow = new Date();
+  const fiados = dataCom.slice(1)
+    .filter(r => String(r[4]) === 'FECHADA' && String(r[8]).toLowerCase().includes('fiado'))
+    .map(r => {
+      const d = parseDate(r[3]);
+      let dias = 0;
+      if (d) {
+        const diff = hojeNow.getTime() - d.getTime();
+        dias = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+      }
+      return {
+        id: r[0],
+        mesa: r[1],
+        cliente: r[2] || '?',
+        data: d ? Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy") : '?',
+        valor: Number(r[7]) || 0,
+        dias: dias
+      };
+    }).sort((a, b) => b.dias - a.dias);
+
   return {
     totalVendido: total,
     qtdVendida: qtd,
@@ -537,6 +563,7 @@ function getDashboardData(inicio, fim) {
     todosProdutos: todosProdutos,
     rankingCategorias: rankingCategorias,
     seriesHoras: seriesHoras,
+    fiados: fiados,
     debug: { inicioRecebido: inicio, fimRecebido: fim, numVendasProcessadas: data.length - 1 }
   };
 }

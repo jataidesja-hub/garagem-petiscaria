@@ -701,6 +701,30 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card" id="card-fiados" style="display:none; margin-top: 2rem;">
+                    <div
+                        style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin:0">🚩 Controle de Fiados (Dívidas Ativas)</h3>
+                        <span id="fiados-count"
+                            style="background: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">0</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width:100%; font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Ref / Mesa</th>
+                                    <th align="right">Valor</th>
+                                    <th align="center">Tempo</th>
+                                    <th align="right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-fiados"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- ESTOQUE -->
@@ -741,12 +765,18 @@
                         style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end;">
                         <div>
                             <label style="font-size: 0.8rem; color: var(--text-muted);">Forma de Pagamento</label>
-                            <select id="vd-pagamento" style="margin-bottom:0">
+                            <select id="vd-pagamento" style="margin-bottom:0" onchange="toggleVdCliente()">
                                 <option value="Dinheiro">💵 Dinheiro</option>
                                 <option value="Pix">📱 Pix</option>
                                 <option value="Débito">💳 Débito</option>
                                 <option value="Crédito">💳 Crédito</option>
+                                <option value="Voucher">🎟️ Voucher</option>
+                                <option value="Fiado">🚩 Fiado</option>
                             </select>
+                        </div>
+                        <div id="vd-cliente-cont" style="display:none">
+                            <label style="font-size: 0.8rem; color: var(--text-muted);">Nome do Cliente (Fiado)</label>
+                            <input type="text" id="vd-cliente" placeholder="Quem está devendo?" style="margin-bottom:0">
                         </div>
                         <div>
                             <h2 id="vd-total" style="color: var(--primary); margin-bottom: 0.5rem; text-align: right;">
@@ -1025,7 +1055,34 @@
                         </div>`;
                 }
                 document.getElementById('d-pagamentos').innerHTML = pagHtml || 'Nenhum pagamento.';
+
+                // Renderizar Fiados
+                if (d.fiados && d.fiados.length > 0) {
+                    document.getElementById('card-fiados').style.display = 'block';
+                    document.getElementById('fiados-count').innerText = d.fiados.length;
+                    document.getElementById('lista-fiados').innerHTML = d.fiados.map(f => `
+                        <tr>
+                            <td>${f.data}</td>
+                            <td><b>${f.cliente}</b></td>
+                            <td><small>${f.mesa}</small></td>
+                            <td align="right"><b>R$ ${f.valor.toFixed(2)}</b></td>
+                            <td align="center"><span style="color:${f.dias > 30 ? 'var(--accent)' : 'var(--warning)'}">${f.dias} dias</span></td>
+                            <td align="right">
+                                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.7rem;" onclick="visualizar('${f.id}', '${f.cliente}')">🔎 Ver</button>
+                                <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.7rem; margin-left:5px" onclick="abrirPagamentoFiado('${f.id}', '${f.cliente}', ${f.valor})">💰 Pagar</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    document.getElementById('card-fiados').style.display = 'none';
+                }
             }).getDashboardData(inicio, fim);
+        }
+
+        function abrirPagamentoFiado(id, cliente, total) {
+            // Reaproveita a lógica de visualização para mostrar o que o cliente deve antes de pagar?
+            // Para simplificar agora, apenas abre a interface de pagamento para essa comanda
+            visualizar(id, cliente);
         }
 
         function carregarEstoque() {
@@ -1177,6 +1234,8 @@
         function finalizarVD() {
             if (carrinhoVD.length === 0) return;
             let m = document.getElementById('vd-pagamento').value;
+            let clie = document.getElementById('vd-cliente').value;
+            if (m === 'Fiado' && !clie) { showToast("Informe o nome do cliente para Fiado!", "error"); return; }
             if (!confirm(`Confirmar venda no ${m}?`)) return;
 
             mostrarCarregando("Finalizando...");
@@ -1186,6 +1245,7 @@
                 tipo: 'VENDA_DIRETA',
                 total: t,
                 forma: m,
+                cliente: clie,
                 pago: t,
                 troco: 0,
                 itens: carrinhoVD.map(it => ({
@@ -1381,6 +1441,10 @@
                     .catch(err => console.log('Erro SW', err));
             }
         };
+        function toggleVdCliente() {
+            const m = document.getElementById('vd-pagamento').value;
+            document.getElementById('vd-cliente-cont').style.display = m === 'Fiado' ? 'block' : 'none';
+        }
     </script>
 </body>
 

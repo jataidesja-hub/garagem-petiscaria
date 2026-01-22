@@ -785,7 +785,14 @@
                 <option value="Pix">📱 Pix</option>
                 <option value="Débito">💳 Cartão Débito</option>
                 <option value="Crédito">💳 Cartão Crédito</option>
+                <option value="Voucher">🎟️ Voucher</option>
+                <option value="Fiado">🚩 Fiado</option>
             </select>
+
+            <div id="cont-pag-cliente" style="display:none; margin-top: 10px;">
+                <label style="font-size: 0.75rem; color: var(--text-muted);">Nome do Cliente (Fiado):</label>
+                <input type="text" id="pag-cliente" placeholder="Inserir nome para rastro" style="margin-top: 5px;">
+            </div>
 
             <div
                 style="margin-top:10px; padding:15px; background:rgba(255,255,255,0.03); border-radius: 20px; border: 1px solid var(--glass);">
@@ -1364,8 +1371,11 @@
             }
 
             let m = document.getElementById('pag-metodo').value;
+            let clie = document.getElementById('pag-cliente').value;
+            if (m === 'Fiado' && !clie) { showToast("Informe o nome do cliente para Fiado!", "error"); return; }
             let dados = {
                 id: idAtivo, tipo: 'COMANDA', total: valPagar, forma: m,
+                cliente: clie,
                 pago: parseFloat(document.getElementById('pag-valor').value) || 0,
                 troco: parseFloat(document.getElementById('pag-troco').innerText.replace('R$ ', '')),
                 itens: itensPagar,
@@ -1473,7 +1483,12 @@
             google.script.run.withSuccessHandler(() => { mostrarFinalizado("Aberta!", () => fecharModais()); }).abrirNovaComanda(n);
         }
 
-        function ajustarCampos() { recalcParcial(); }
+        function ajustarCampos() {
+            recalcParcial();
+            const m = document.getElementById('pag-metodo').value;
+            const cont = document.getElementById('cont-pag-cliente');
+            if (cont) cont.style.display = m === 'Fiado' ? 'block' : 'none';
+        }
         // LÓGICA PWA
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
