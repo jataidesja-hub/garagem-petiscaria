@@ -498,7 +498,16 @@ function getDashboardData(inicio, fim) {
     categorias[cat].total += produtos[nome].total;
   });
 
-  const numDias = diasUnicos.size || 1;
+  // Calcular número de dias real do período se fornecido, senão usa dias com vendas
+  let numDias = 1;
+  if (inicio && fim) {
+    const dIni = new Date(inicio + "T00:00:00");
+    const dFim = new Date(fim + "T00:00:00");
+    const diffTime = Math.abs(dFim - dIni);
+    numDias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  } else {
+    numDias = diasUnicos.size || 1;
+  }
 
   // Converter produtos em array e calcular médias - LISTA COMPLETA com categoria
   let todosProdutos = Object.keys(produtos).map(nome => ({
