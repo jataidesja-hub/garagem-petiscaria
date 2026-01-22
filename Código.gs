@@ -1,5 +1,5 @@
 /****************************************************
- * SISTEMA DISTRIBUIDORA DE BEBIDAS - V12.0 (PDV PRO)
+ * SISTEMA A GARAGEM PETISCARIA - V1.0
  ****************************************************/
 
 const ABA_ESTOQUE       = 'Estoque';
