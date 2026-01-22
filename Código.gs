@@ -189,6 +189,7 @@ function listarTodasComandas(dataInicio, dataFim, horaInicio, horaFim) {
     return { 
       id: id, 
       nome: r[1], 
+      cliente: r[2],
       data: dataParaFiltro, 
       dataComp: dataComp,
       dataExibicao: dataFormatada, 

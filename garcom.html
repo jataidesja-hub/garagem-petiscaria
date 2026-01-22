@@ -1389,6 +1389,7 @@
                     mostrarFinalizado("Venda Concluída!", () => {
                         prepararCupom(dados);
                         fecharModais();
+                        document.getElementById('pag-cliente').value = '';
                     });
                 } else { showToast("Erro: " + res.erro, "error"); }
             }).finalizarVenda(dados);

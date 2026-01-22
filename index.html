@@ -974,7 +974,8 @@
                             html += `
                                 <div class="comanda-item" style="${borderStyle}" onclick="visualizar('${c.id}', '${c.nome}')">
                                     <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
-                                    <b>${alertIcon}${c.nome}</b><br>
+                                    <b>${alertIcon}${c.nome}</b>
+                                    ${c.cliente && c.cliente !== 'Balcão' ? `<br><small style="color:var(--primary); font-size:0.7rem">👤 ${c.cliente}</small>` : ''}<br>
                                     <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${(c.total || 0).toFixed(2)}</span>
                                     <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${c.dataExibicao}</div>
                                 </div>`;
@@ -1259,6 +1260,8 @@
             google.script.run.withSuccessHandler(() => {
                 esconderCarregando();
                 carrinhoVD = [];
+                document.getElementById('vd-cliente').value = '';
+                toggleVdCliente();
                 renderVD();
                 carregarDash();
                 carregarVDSerecente();
