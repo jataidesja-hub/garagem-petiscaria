@@ -988,7 +988,7 @@
                     groupedHtml = '<p style="text-align:center; color:var(--text-muted)">Nenhuma venda registrada.</p>';
                 } else {
                     cats.forEach(cat => {
-                        let prods = d.todosProdutos.filter(p => p.categoria === cat);
+                        let prods = todosProds.filter(p => p.categoria === cat);
                         groupedHtml += `
                             <div style="margin-bottom: 20px;">
                                 <h4 style="color:var(--accent); border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:10px;">${cat}</h4>
@@ -1031,9 +1031,9 @@
         function carregarEstoque() {
             google.script.run.withSuccessHandler(data => {
                 estoqueCache = data;
-                let html = `<table><thead><tr><th></th><th>Produto</th><th>Cat.</th><th>Preço</th><th>Qtd</th><th>Ações</th></tr></thead><tbody>`;
-                data.forEach(p => {
-                    html += `
+                if (Array.isArray(data)) {
+                    data.forEach(p => {
+                        html += `
                         <tr>
                             <td><img src="${p.imagem}" class="img-estoque"></td>
                             <td><b>${p.nome}</b><br><small>${p.codigo}</small></td>
@@ -1042,7 +1042,8 @@
                             <td style="color:${p.critico ? 'var(--primary)' : 'inherit'}">${p.estoque} ${p.critico ? '⚠️' : ''}</td>
                             <td><button class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="abrirEdicao('${p.codigo}')">Editar</button></td>
                         </tr>`;
-                });
+                    });
+                }
                 document.getElementById('lista-estoque').innerHTML = html + '</tbody></table>';
             }).listarEstoque();
         }
