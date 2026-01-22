@@ -925,7 +925,7 @@
         let notificacoesVistas = new Set();
         function checarNotificacoes() {
             google.script.run.withSuccessHandler(lista => {
-                if (!lista) return;
+                if (!Array.isArray(lista)) return;
                 lista.forEach(n => {
                     let chave = n.idComanda + n.nome + n.qtd;
                     if (!notificacoesVistas.has(chave)) {
@@ -950,24 +950,26 @@
 
             google.script.run.withSuccessHandler(lista => {
                 let html = "";
-                lista.forEach(c => {
-                    let match = true;
-                    if (inicio && c.data < inicio) match = false;
-                    if (fim && c.data > fim) match = false;
+                if (Array.isArray(lista)) {
+                    lista.forEach(c => {
+                        let match = true;
+                        if (inicio && c.data < inicio) match = false;
+                        if (fim && c.data > fim) match = false;
 
-                    if (match) {
-                        const borderStyle = c.isAntiga && c.status === 'ABERTA' ? 'border: 2px solid #ff9800; animation: pulse-warn 2s infinite;' : '';
-                        const alertIcon = c.isAntiga && c.status === 'ABERTA' ? '<i class="fas fa-clock" style="color:#ff9800; margin-right:5px;"></i>' : '';
+                        if (match) {
+                            const borderStyle = c.isAntiga && c.status === 'ABERTA' ? 'border: 2px solid #ff9800; animation: pulse-warn 2s infinite;' : '';
+                            const alertIcon = c.isAntiga && c.status === 'ABERTA' ? '<i class="fas fa-clock" style="color:#ff9800; margin-right:5px;"></i>' : '';
 
-                        html += `
-                            <div class="comanda-item" style="${borderStyle}" onclick="visualizar('${c.id}', '${c.nome}')">
-                                <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
-                                <b>${alertIcon}${c.nome}</b><br>
-                                <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${(c.total || 0).toFixed(2)}</span>
-                                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${c.dataExibicao}</div>
-                            </div>`;
-                    }
-                });
+                            html += `
+                                <div class="comanda-item" style="${borderStyle}" onclick="visualizar('${c.id}', '${c.nome}')">
+                                    <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
+                                    <b>${alertIcon}${c.nome}</b><br>
+                                    <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${(c.total || 0).toFixed(2)}</span>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${c.dataExibicao}</div>
+                                </div>`;
+                        }
+                    });
+                }
                 document.getElementById('lista-comandas-hist').innerHTML = html || 'Sem dados.';
             }).listarTodasComandas();
 
