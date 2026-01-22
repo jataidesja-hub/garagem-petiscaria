@@ -173,13 +173,13 @@ function listarTodasComandas(dataInicio, dataFim) {
     let dataFormatada = "";
     let dataParaFiltro = "";
     let isAntiga = false;
-    try { 
-      let d = new Date(r[3]);
+    let d = parseDate(r[3]);
+    if (d) {
       dataFormatada = Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy HH:mm");
       dataParaFiltro = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd"); 
       // Se a data da comanda for menor que hoje, é antiga
       if (dataParaFiltro < hoje) isAntiga = true;
-    } catch(e) { }
+    }
     
     return { 
       id: id, 
@@ -447,18 +447,17 @@ function getDashboardData(inicio, fim) {
       // Capturar data (YYYY-MM-DD)
       let dStr = "";
       let hora = 0;
-      try {
-        let d = new Date(r[0]);
-        if (!isNaN(d)) {
-          dStr = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd");
-          hora = d.getHours();
-          diasUnicos.add(dStr);
-        }
-      } catch(e){}
+      let d = parseDate(r[0]);
+      if (d) {
+        dStr = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd");
+        hora = d.getHours();
+        diasUnicos.add(dStr);
+      }
 
-      // Filtro de período
-      if (inicio && dStr && dStr < inicio) return;
-      if (fim && dStr && dStr > fim) return;
+      // Filtro de período - Se não houver data válida ou estiver fora do intervalo, ignora
+      if (!dStr) return;
+      if (inicio && dStr < inicio) return;
+      if (fim && dStr > fim) return;
 
       // 1. Métricas financeiras globais (inclui tudo)
       total += t;
@@ -677,5 +676,29 @@ function alterarNomeMesa(idComanda, novoNome) {
 
 function getScriptUrl() {
   return ScriptApp.getService().getUrl();
+}
+
+/**
+ * Função auxiliar para converter valores de data (Date ou String) da planilha
+ */
+function parseDate(val) {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  
+  const s = String(val);
+  // Tenta formato DD/MM/YYYY HH:mm:ss ou DD/MM/YYYY
+  const parts = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2}):(\d{1,2}))?/);
+  if (parts) {
+    const d = parseInt(parts[1], 10);
+    const m = parseInt(parts[2], 10) - 1;
+    const y = parseInt(parts[3], 10);
+    const h = parseInt(parts[4] || 0, 10);
+    const min = parseInt(parts[5] || 0, 10);
+    const sec = parseInt(parts[6] || 0, 10);
+    return new Date(y, m, d, h, min, sec);
+  }
+  
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
 }
 
