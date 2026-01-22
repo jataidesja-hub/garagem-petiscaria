@@ -1151,9 +1151,27 @@
             let t = 0;
             document.querySelector('#vd-carrinho tbody').innerHTML = carrinhoVD.map(i => {
                 t += (i.preco * i.qtd);
-                return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${(i.preco * i.qtd).toFixed(2)}</td></tr>`;
+                return `<tr>
+                    <td><b>${i.nome}</b></td>
+                    <td style="white-space:nowrap">
+                        <button class="btn btn-outline" style="padding: 2px 10px; font-size: 0.8rem; min-width: 30px;" onclick="updateVD('${i.codigo}', -1)">-</button>
+                        <span style="display: inline-block; width: 30px; text-align: center; font-weight: 700;">${i.qtd}</span>
+                        <button class="btn btn-outline" style="padding: 2px 10px; font-size: 0.8rem; min-width: 30px;" onclick="updateVD('${i.codigo}', 1)">+</button>
+                    </td>
+                    <td align="right">R$ ${(i.preco * i.qtd).toFixed(2)}</td>
+                </tr>`;
             }).join('');
             document.getElementById('vd-total').innerText = 'R$ ' + t.toFixed(2);
+        }
+
+        function updateVD(cod, delta) {
+            let item = carrinhoVD.find(x => x.codigo === cod);
+            if (!item) return;
+            item.qtd += delta;
+            if (item.qtd <= 0) {
+                carrinhoVD = carrinhoVD.filter(x => x.codigo !== cod);
+            }
+            renderVD();
         }
 
         function finalizarVD() {
