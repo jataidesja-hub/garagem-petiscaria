@@ -437,14 +437,14 @@ function getDashboardData(inicio, fim) {
   let seriesHoras = {}; // Para o gráfico por hora
 
   if (data.length > 1) {
-    data.slice(1).forEach(r => {
+    Logger.log("Iniciando processamento de " + (data.length - 1) + " vendas. Filtro: " + inicio + " ate " + fim);
+    data.slice(1).forEach((r, idx) => {
       const cod = String(r[3]);
       const q = Number(r[5]) || 0;
       const t = Number(r[9]) || 0;
       const met = String(r[10]);
       const prodNome = String(r[4]);
       
-      // Capturar data (YYYY-MM-DD)
       let dStr = "";
       let hora = 0;
       let d = parseDate(r[0]);
@@ -454,24 +454,28 @@ function getDashboardData(inicio, fim) {
         diasUnicos.add(dStr);
       }
 
-      // Filtro de período - Se não houver data válida ou estiver fora do intervalo, ignora
+      // LOG PARA DEPURAÇÃO: Solo para um produto específico para não poluir o log
+      if (idx < 50 || prodNome.includes("Brahma")) {
+        Logger.log("Linha " + (idx+2) + ": " + prodNome + " | Data: " + r[0] + " | dStr: " + dStr + " | Qtd: " + q);
+      }
+
       if (!dStr) return;
       if (inicio && dStr < inicio) return;
       if (fim && dStr > fim) return;
+      
+      if (prodNome.includes("Brahma")) {
+         Logger.log("--> Brahma Incluída! Acumulado parcial de qtd: " + (produtos[prodNome] ? produtos[prodNome].qtd + q : q));
+      }
 
-      // 1. Métricas financeiras globais (inclui tudo)
       total += t;
       if(met && met !== 'undefined') {
         pagamentos[met] = (pagamentos[met] || 0) + t;
       }
 
-      // 2. Séries temporais (se for período de 1 dia ou hoje, agrupa por hora)
       if (!inicio || inicio === fim) { 
-        // Se não tem data ou se é o mesmo dia (ex: filtro de hoje), preenche o gráfico
         seriesHoras[hora] = (seriesHoras[hora] || 0) + t;
       }
 
-      // 3. Métricas de Produtos (Apenas se o código existir no Estoque)
       if(estoque.includes(cod)) {
         qtd += q;
         if(!produtos[prodNome]) produtos[prodNome] = { qtd: 0, total: 0, categoria: 'Bebidas' };
@@ -479,6 +483,7 @@ function getDashboardData(inicio, fim) {
         produtos[prodNome].total += t;
       }
     });
+    Logger.log("Fim do processamento. Total Brahma: " + (produtos["Brahma Chopp 600ml"] ? produtos["Brahma Chopp 600ml"].qtd : 0));
   }
 
   // Mapear categorias do estoque
