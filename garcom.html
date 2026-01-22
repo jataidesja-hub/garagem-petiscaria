@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>DEMONSTRAÇÃO - Pedidos</title>
+    <title>A GARAGEM - Pedidos</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DEMONSTRAÇÃO">
+    <meta name="apple-mobile-web-app-title" content="A Garagem">
     <style>
         :root {
             --primary: #2196F3;
@@ -550,6 +550,20 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+
+        @keyframes pulse-warn {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 152, 0, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+            }
+        }
     </style>
 </head>
 
@@ -580,7 +594,8 @@
                 title="Voltar ao Início">
                 <i class="fas fa-arrow-left"></i> VOLTAR
             </button>
-            <span style="font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: 1px;">🚀 DEMONSTRAÇÃO</span>
+            <span style="font-size: 1rem; font-weight: 700; color: #fff; letter-spacing: 1px;">🍻 A GARAGEM
+                PETISCARIA</span>
         </div>
         <button onclick="desbloquearAudio(); carregarComandas(); carregarProdutos();"
             style="background:rgba(255,255,255,0.05); border:1px solid var(--glass); color:var(--primary); padding:8px; border-radius:10px; cursor:pointer;"
@@ -675,7 +690,7 @@
             </div>
             <div id="acoes-mesa" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1.5rem;">
                 <button id="btn-pagar" class="btn btn-primary" onclick="abrirPagamento()">💸 PAGAR</button>
-                <button id="btn-reimprimir" class="btn btn-outline" onclick="reimprimirCupom()">🖨️
+                <button id="btn-reimprimir" class="btn btn-outline" style="display:flex" onclick="reimprimirCupom()">🖨️
                     CUPOM</button>
                 <button class="btn btn-outline" onclick="fecharModais()">SAIR</button>
             </div>
@@ -990,8 +1005,9 @@
                     </div>`;
                 } else {
                     grid.innerHTML = filtered.map(c => {
-                        let alertaAntiga = c.isAntiga ? '<i class="fas fa-exclamation-circle" style="color:orange; margin-left:5px;" title="Aberta anteriormente"></i>' : '';
-                        let styleAntiga = c.isAntiga ? 'border: 1px solid rgba(255, 152, 0, 0.3);' : '';
+                        const isAbertaEAntiga = c.status === 'ABERTA' && c.isAntiga;
+                        const styleAntiga = isAbertaEAntiga ? 'border: 1px solid #ff9800; animation: pulse-warn 2s infinite;' : '';
+                        const alertaAntiga = isAbertaEAntiga ? '<i class="fas fa-clock" style="color:#ff9800; margin-left:5px;" title="Aberta anteriormente"></i>' : '';
 
                         return `
                         <div class="comanda-card" onclick="abrirDetalhes('${c.id}', '${c.nome}', '${c.status}')" style="animation: fadeIn 0.3s ease-out forwards; ${styleAntiga}">
@@ -1301,7 +1317,7 @@
         function prepararCupom(dados) {
             const mesa = document.getElementById('view-nome').innerText;
             document.getElementById('cupom-mesa').innerText = mesa;
-            document.getElementById('cupom-data-hora').innerText = new Date().toLocaleString();
+            document.getElementById('cupom-data-hora').innerText = new Date().toLocaleString('pt-BR', { timeZone: 'America/Bahia' });
 
             let produtos = dados.itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
             let pagamentos = dados.itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
