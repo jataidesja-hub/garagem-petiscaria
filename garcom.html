@@ -940,7 +940,7 @@
             if (status === 'FECHADA') {
                 filtroContainer.style.display = 'block';
                 // Definir data de hoje como padrão SEMPRE que mudar para aba fechadas
-                const hoje = new Date().toISOString().split('T')[0];
+                const hoje = new Date().toLocaleDateString('sv-SE');
                 document.getElementById('filtro-data').value = hoje;
             } else {
                 filtroContainer.style.display = 'none';
@@ -1388,7 +1388,7 @@
         }
 
         function limparFiltroData() {
-            document.getElementById('filtro-data').value = new Date().toISOString().split('T')[0];
+            document.getElementById('filtro-data').value = new Date().toLocaleDateString('sv-SE');
             carregarComandas();
         }
 
