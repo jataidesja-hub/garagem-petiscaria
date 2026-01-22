@@ -437,41 +437,31 @@ function getDashboardData(inicio, fim) {
   let seriesHoras = {}; // Para o gráfico por hora
 
   if (data.length > 1) {
-    Logger.log("Iniciando processamento de " + (data.length - 1) + " vendas. Filtro: " + inicio + " ate " + fim);
-    data.slice(1).forEach((r, idx) => {
-      const cod = String(r[3]);
-      const q = Number(r[5]) || 0;
-      const t = Number(r[9]) || 0;
-      const met = String(r[10]);
-      const prodNome = String(r[4]);
+    data.slice(1).forEach((r) => {
+      const d = parseDate(r[0]);
+      if (!d) return;
+
+      const dStr = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd");
       
-      let dStr = "";
-      let hora = 0;
-      let d = parseDate(r[0]);
-      if (d) {
-        dStr = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd");
-        hora = d.getHours();
-        diasUnicos.add(dStr);
-      }
-
-      // LOG PARA DEPURAÇÃO: Solo para um produto específico para não poluir o log
-      if (idx < 50 || prodNome.includes("Brahma")) {
-        Logger.log("Linha " + (idx+2) + ": " + prodNome + " | Data: " + r[0] + " | dStr: " + dStr + " | Qtd: " + q);
-      }
-
-      if (!dStr) return;
+      // FILTRO DE DATA
       if (inicio && dStr < inicio) return;
       if (fim && dStr > fim) return;
       
-      if (prodNome.includes("Brahma")) {
-         Logger.log("--> Brahma Incluída! Acumulado parcial de qtd: " + (produtos[prodNome] ? produtos[prodNome].qtd + q : q));
-      }
+      const cod = String(r[3]);
+      const prodNome = String(r[4]);
+      const q = Number(r[5]) || 0;
+      const t = Number(r[9]) || 0;
+      const met = String(r[10]);
+      const hora = d.getHours();
 
+      diasUnicos.add(dStr);
       total += t;
+      
       if(met && met !== 'undefined') {
         pagamentos[met] = (pagamentos[met] || 0) + t;
       }
 
+      // Gráfico por hora (apenas se for um único dia ou período muito curto)
       if (!inicio || inicio === fim) { 
         seriesHoras[hora] = (seriesHoras[hora] || 0) + t;
       }
@@ -483,7 +473,6 @@ function getDashboardData(inicio, fim) {
         produtos[prodNome].total += t;
       }
     });
-    Logger.log("Fim do processamento. Total Brahma: " + (produtos["Brahma Chopp 600ml"] ? produtos["Brahma Chopp 600ml"].qtd : 0));
   }
 
   // Mapear categorias do estoque
@@ -690,7 +679,14 @@ function parseDate(val) {
   if (!val) return null;
   if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
   
-  const s = String(val);
+  const s = String(val).trim();
+  
+  // Tenta formato ISO (YYYY-MM-DD...)
+  if (s.includes('-')) {
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d;
+  }
+
   // Tenta formato DD/MM/YYYY HH:mm:ss ou DD/MM/YYYY
   const parts = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2}):(\d{1,2}))?/);
   if (parts) {
@@ -703,6 +699,7 @@ function parseDate(val) {
     return new Date(y, m, d, h, min, sec);
   }
   
+  // Fallback
   const d = new Date(s);
   return isNaN(d.getTime()) ? null : d;
 }
