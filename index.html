@@ -1208,6 +1208,10 @@
 
         function carregarVDSerecente() {
             google.script.run.withSuccessHandler(lista => {
+                if (!Array.isArray(lista)) {
+                    document.getElementById('lista-vd-hist').innerHTML = 'Nenhuma venda recente.';
+                    return;
+                }
                 let html = "";
                 // Somente VENDAS DIRETAS (ID começa com VD)
                 lista.filter(c => c.id && String(c.id).startsWith('VD')).slice(0, 10).forEach(v => {
