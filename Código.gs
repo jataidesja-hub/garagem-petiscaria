@@ -90,7 +90,7 @@ function criarEstrutura() {
     {nome: ABA_ESTOQUE, cabecalho: ['Código', 'Nome', 'Unidade', 'Tipo Controle', 'Qtd por Caixa', 'Preço Venda', 'Estoque Atual', 'Estoque Mínimo', 'URL Imagem', 'Categoria']},
     {nome: ABA_VENDAS, cabecalho: ['Data/Hora', 'Tipo', 'ID Comanda', 'Cód Produto', 'Nome', 'Qtd', 'Preço Unit', 'Total Bruto', 'Desconto', 'Total Líquido', 'Pagamento', 'Valor Pago', 'Troco']},
     {nome: ABA_COMANDAS, cabecalho: ['ID Comanda', 'Mesa/Nome', 'Cliente', 'Abertura', 'Status', 'Bruto', 'Desconto', 'Líquido', 'Pagamento', 'Valor Pago', 'Troco']},
-    {nome: ABA_COMANDA_ITENS, cabecalho: ['ID Comanda', 'Cód Produto', 'Nome', 'Qtd', 'Preço Unit', 'Total Bruto', 'Desconto', 'Observação', 'Categoria', 'StatusItem', 'Timestamp']}
+    {nome: ABA_COMANDA_ITENS, cabecalho: ['ID Comanda', 'Cód Produto', 'Nome', 'Qtd', 'Preço Unit', 'Total Bruto', 'Desconto', 'Observação', 'Categoria', 'StatusItem', 'Timestamp', 'Garçom']}
   ];
   abas.forEach(a => {
     let sh = getOrCreateSheet(a.nome);
@@ -146,17 +146,21 @@ function adicionarProduto(p) {
   return { sucesso: true };
 }
 
-function listarTodasComandas(dataInicio, dataFim) {
+function listarTodasComandas(dataInicio, dataFim, horaInicio, horaFim) {
   const sh = getOrCreateSheet(ABA_COMANDAS);
   const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
   const data = sh.getDataRange().getValues();
   const itens = shItens.getDataRange().getValues();
   if (data.length < 2) return [];
   
-  // Se não passar datas (null, undefined ou vazio), considera apenas o dia atual
   const hoje = Utilities.formatDate(new Date(), "GMT-3", "yyyy-MM-dd");
   const inicio = (dataInicio && dataInicio !== '') ? dataInicio : hoje;
   const fim = (dataFim && dataFim !== '') ? dataFim : hoje;
+  const hInicio = (horaInicio && horaInicio !== '') ? horaInicio : '00:00';
+  const hFim = (horaFim && horaFim !== '') ? horaFim : '23:59';
+  
+  const fullInicio = inicio + " " + hInicio;
+  const fullFim = fim + " " + hFim;
   
   return data.slice(1).reverse().map(r => {
     let id = String(r[0]);
@@ -172,12 +176,13 @@ function listarTodasComandas(dataInicio, dataFim) {
     
     let dataFormatada = "";
     let dataParaFiltro = "";
+    let dataComp = ""; // Para comparação de data+hora
     let isAntiga = false;
     let d = parseDate(r[3]);
     if (d) {
       dataFormatada = Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy HH:mm");
       dataParaFiltro = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd"); 
-      // Se a data da comanda for menor que hoje, é antiga
+      dataComp = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd HH:mm");
       if (dataParaFiltro < hoje) isAntiga = true;
     }
     
@@ -185,19 +190,16 @@ function listarTodasComandas(dataInicio, dataFim) {
       id: id, 
       nome: r[1], 
       data: dataParaFiltro, 
+      dataComp: dataComp,
       dataExibicao: dataFormatada, 
       status: status, 
       total: totalComanda,
       isAntiga: isAntiga 
     };
   }).filter(comanda => {
-    // REGRA DE FILTRO:
-    // 1. Se estiver ABERTA, mostra sempre (independente da data)
-    // 2. Se estiver FECHADA ou outro status, valida o filtro de data
     if (comanda.status === 'ABERTA') return true;
-    
-    if (!comanda.data) return false;
-    return comanda.data >= inicio && comanda.data <= fim;
+    if (!comanda.dataComp) return false;
+    return comanda.dataComp >= fullInicio && comanda.dataComp <= fullFim;
   });
 }
 
@@ -226,7 +228,8 @@ function buscarItensComanda(idComanda) {
           preco: Number(r[4]),
           total: 0,
           categoria: cat,
-          obs: String(r[7] || '')
+          obs: String(r[7] || ''),
+          garcom: String(r[11] || '')
         };
       }
       agrupados[chave].qtd += Number(r[3]);
@@ -255,7 +258,7 @@ function abrirNovaComanda(nome) {
   return id;
 }
 
-function adicionarItemComanda(idComanda, cod, obs) {
+function adicionarItemComanda(idComanda, cod, obs, garcom) {
   if (!idComanda || !cod) return {sucesso: false, erro: "Dados incompletos"};
   
   const shEst = getOrCreateSheet(ABA_ESTOQUE);
@@ -279,7 +282,8 @@ function adicionarItemComanda(idComanda, cod, obs) {
     obs || '', 
     cat, 
     'PENDENTE', 
-    new Date()
+    new Date(),
+    garcom || ''
   ]);
 
   processarBaixaUnica(cod, 1);

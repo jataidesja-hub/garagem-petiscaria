@@ -606,7 +606,26 @@
             <i class="fas fa-sync-alt" id="sync-icon"></i>
         </button>
     </header>
-    <div class="container">
+
+    <!-- Seletor de Garçom Fixo -->
+    <div class="container" style="padding-bottom: 0;">
+        <div
+            style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 15px; border: 1px solid var(--glass); display: flex; align-items: center; gap: 10px;">
+            <label style="color: var(--primary); font-weight: 700; white-space: nowrap;"><i class="fas fa-user-tie"></i>
+                GARÇOM:</label>
+            <select id="select-garcom" onchange="salvarGarcom(this.value)"
+                style="margin: 0; padding: 0.5rem; border-color: var(--primary); font-weight: 600;">
+                <option value="">Selecione...</option>
+                <option value="Deonice">Deonice</option>
+                <option value="Henrrique">Henrrique</option>
+                <option value="Luiz Eduardo">Luiz Eduardo</option>
+                <option value="Elielson">Elielson</option>
+                <option value="Edimeire">Edimeire</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="container" style="padding-top: 1rem;">
         <div
             style="display:flex; justify-content: space-around; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 50px; margin-bottom: 1.5rem; border: 1px solid var(--glass);">
             <button id="tab-abertas" class="cat-btn active" style="flex:1"
@@ -615,17 +634,38 @@
                 onclick="switchMainTab('FECHADA')">FECHADAS</button>
         </div>
 
-        <!-- Filtro de Data para Comandas Fechadas -->
+        <!-- Filtro Avançado para Comandas Fechadas -->
         <div id="filtro-data-container"
             style="display:none; margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 15px; border: 1px solid var(--glass);">
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <label style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">📅 Filtrar por
-                    data:</label>
-                <input type="date" id="filtro-data"
-                    style="flex: 1; min-width: 150px; padding: 0.8rem; margin: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--primary); border-radius: 10px; color: var(--primary); font-weight: 600;"
-                    onchange="carregarComandas()">
-                <button class="btn btn-outline" onclick="limparFiltroData()"
-                    style="padding: 0.8rem 1.2rem; font-size: 0.85rem;">Hoje</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end;">
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700;">📅 DATA
+                        INÍCIO</label>
+                    <input type="date" id="filtro-data-inicio" onchange="carregarComandas()"
+                        style="margin: 5px 0 0; padding: 0.6rem; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700;">📅 DATA FIM</label>
+                    <input type="date" id="filtro-data-fim" onchange="carregarComandas()"
+                        style="margin: 5px 0 0; padding: 0.6rem; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700;">🕒 HORA
+                        INÍCIO</label>
+                    <input type="time" id="filtro-hora-inicio" value="00:00" onchange="carregarComandas()"
+                        style="margin: 5px 0 0; padding: 0.6rem; font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700;">🕒 HORA FIM</label>
+                    <input type="time" id="filtro-hora-fim" value="23:59" onchange="carregarComandas()"
+                        style="margin: 5px 0 0; padding: 0.6rem; font-size: 0.9rem;">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-outline" onclick="setFiltroHojeGarcom()"
+                    style="flex:1; padding: 0.6rem; font-size: 0.8rem;">Hoje</button>
+                <button class="btn btn-outline" onclick="limparFiltrosAvancados()"
+                    style="flex:1; padding: 0.6rem; font-size: 0.8rem; border-color: var(--accent); color: var(--accent);">Limpar</button>
             </div>
         </div>
 
@@ -906,8 +946,35 @@
         };
 
         function iniciarApp() {
+            // Recuperar garçom salvo
+            const salvo = localStorage.getItem('garcom_ativo');
+            if (salvo) document.getElementById('select-garcom').value = salvo;
+
+            setFiltroHojeGarcom();
             carregarComandas();
             carregarProdutos();
+        }
+
+        function salvarGarcom(v) {
+            localStorage.setItem('garcom_ativo', v);
+            showToast("Garçom: " + (v || "Nenhum"), "success");
+        }
+
+        function setFiltroHojeGarcom() {
+            const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
+            document.getElementById('filtro-data-inicio').value = hoje;
+            document.getElementById('filtro-data-fim').value = hoje;
+            document.getElementById('filtro-hora-inicio').value = '00:00';
+            document.getElementById('filtro-hora-fim').value = '23:59';
+            if (statusTabAtiva === 'FECHADA') carregarComandas();
+        }
+
+        function limparFiltrosAvancados() {
+            document.getElementById('filtro-data-inicio').value = '';
+            document.getElementById('filtro-data-fim').value = '';
+            document.getElementById('filtro-hora-inicio').value = '00:00';
+            document.getElementById('filtro-hora-fim').value = '23:59';
+            carregarComandas();
         }
 
         function showToast(msg, type = 'success') {
@@ -956,9 +1023,6 @@
             const filtroContainer = document.getElementById('filtro-data-container');
             if (status === 'FECHADA') {
                 filtroContainer.style.display = 'block';
-                // Definir data de hoje como padrão SEMPRE que mudar para aba fechadas (Salvador/BA)
-                const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
-                document.getElementById('filtro-data').value = hoje;
             } else {
                 filtroContainer.style.display = 'none';
             }
@@ -985,13 +1049,14 @@
             // Obter data do filtro se estiver na aba FECHADAS
             let dataInicio = null;
             let dataFim = null;
+            let horaInicio = null;
+            let horaFim = null;
 
             if (statusTabAtiva === 'FECHADA') {
-                const filtroData = document.getElementById('filtro-data').value;
-                if (filtroData) {
-                    dataInicio = filtroData;
-                    dataFim = filtroData;
-                }
+                dataInicio = document.getElementById('filtro-data-inicio').value;
+                dataFim = document.getElementById('filtro-data-fim').value;
+                horaInicio = document.getElementById('filtro-hora-inicio').value;
+                horaFim = document.getElementById('filtro-hora-fim').value;
             }
 
             google.script.run.withSuccessHandler(lista => {
@@ -1024,7 +1089,7 @@
                 if (isBackground && document.getElementById('modalDetalhes').style.display === 'flex') {
                     atualizarItens(statusTabAtiva === 'FECHADA', true);
                 }
-            }).listarTodasComandas(dataInicio, dataFim);
+            }).listarTodasComandas(dataInicio, dataFim, horaInicio, horaFim);
         }
 
         function carregarProdutos() { google.script.run.withSuccessHandler(d => { estoqueCache = d; renderDrop(d); }).listarEstoque(); }
@@ -1071,6 +1136,7 @@
                 let obs = prompt(`Observação para ${nomeProd} (Ex: Sem cebola):`, "");
                 if (obs === null) return; // Cancelado
 
+                const garcomAtivo = document.getElementById('select-garcom').value;
                 mostrarCarregando("Adicionando...");
                 google.script.run.withSuccessHandler(() => {
                     mostrarFinalizado("Adicionado!", () => {
@@ -1078,9 +1144,10 @@
                         toggleDropdown(false);
                         document.getElementById('search-prod').value = '';
                     });
-                }).adicionarItemComanda(idAtivo, String(cod), obs);
+                }).adicionarItemComanda(idAtivo, String(cod), obs, garcomAtivo);
             } else {
                 userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} à mesa?`, () => {
+                    const garcomAtivo = document.getElementById('select-garcom').value;
                     document.getElementById('search-prod').value = '';
                     mostrarCarregando("Adicionando...");
                     google.script.run.withSuccessHandler(() => {
@@ -1088,7 +1155,7 @@
                             atualizarItens();
                             toggleDropdown(false);
                         });
-                    }).adicionarItemComanda(idAtivo, String(cod), "");
+                    }).adicionarItemComanda(idAtivo, String(cod), "", garcomAtivo);
                 });
             }
         }
@@ -1123,7 +1190,7 @@
                     consumoTotal += i.total;
                     return `<tr>
                         <td>
-                            <b>${i.nome}</b><br>
+                            <b>${i.nome}</b> ${i.garcom ? `<small style="font-size:0.6rem; background:rgba(212,175,55,0.1); padding:2px 5px; border-radius:5px; color:var(--primary)">👤 ${i.garcom}</small>` : ''}<br>
                             <small>${i.qtd}x R$ ${i.preco.toFixed(2)}</small>
                             ${i.obs ? `<br><small style="color:var(--primary); font-style:italic">📝 ${i.obs}</small>` : ''}
                         </td>
@@ -1203,12 +1270,13 @@
 
         function adicionarMais(cod, isBackground = false) {
             if (!isBackground) mostrarCarregando("Adicionando...");
+            const garcomAtivo = document.getElementById('select-garcom').value;
             google.script.run.withSuccessHandler(res => {
                 if (res.sucesso) {
                     if (!isBackground) mostrarFinalizado("Adicionado!", () => atualizarItens());
                     else atualizarItens(false, true);
                 } else showToast("Erro: " + res.erro, "error");
-            }).adicionarItemComanda(idAtivo, String(cod));
+            }).adicionarItemComanda(idAtivo, String(cod), "", garcomAtivo);
         }
 
         function reimprimirCupom() {
@@ -1403,12 +1471,6 @@
             let n = document.getElementById('new-mesa').value; if (!n) return showToast("Digite a mesa!", "error");
             mostrarCarregando("Abrindo...");
             google.script.run.withSuccessHandler(() => { mostrarFinalizado("Aberta!", () => fecharModais()); }).abrirNovaComanda(n);
-        }
-
-        function limparFiltroData() {
-            const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
-            document.getElementById('filtro-data').value = hoje;
-            carregarComandas();
         }
 
         function ajustarCampos() { recalcParcial(); }
