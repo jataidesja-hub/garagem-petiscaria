@@ -940,7 +940,8 @@
             if (status === 'FECHADA') {
                 filtroContainer.style.display = 'block';
                 // Definir data de hoje como padrão SEMPRE que mudar para aba fechadas
-                const hoje = new Date().toLocaleDateString('sv-SE');
+                const d = new Date();
+                const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 document.getElementById('filtro-data').value = hoje;
             } else {
                 filtroContainer.style.display = 'none';
@@ -1388,7 +1389,9 @@
         }
 
         function limparFiltroData() {
-            document.getElementById('filtro-data').value = new Date().toLocaleDateString('sv-SE');
+            const d = new Date();
+            const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            document.getElementById('filtro-data').value = hoje;
             carregarComandas();
         }
 

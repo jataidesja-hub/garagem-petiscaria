@@ -1219,7 +1219,8 @@
 
             function carregarVDSerecente() {
                 // Buscar apenas vendas do dia atual
-                const hoje = new Date().toLocaleDateString('sv-SE');
+                const d = new Date();
+                const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 google.script.run.withSuccessHandler(lista => {
                     let html = "";
                     // Somente VENDAS DIRETAS (ID começa com VD)
@@ -1254,7 +1255,8 @@
 
             function restaurarSistema() { if (confirm("CUIDADO: Isso limpa tudo. Continuar?")) google.script.run.withSuccessHandler(() => location.reload()).criarEstrutura(); }
             function setFiltroHoje() {
-                const hoje = new Date().toLocaleDateString('sv-SE');
+                const d = new Date();
+                const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 document.getElementById('dash-inicio').value = hoje;
                 document.getElementById('dash-fim').value = hoje;
                 carregarDash();
@@ -1281,8 +1283,9 @@
             function fecharModais() { document.querySelectorAll('.overlay').forEach(m => m.style.display = 'none'); }
 
             function carregarTudo() {
-                // Setar data de hoje por padrão nos filtros (respeitando fuso horário local)
-                const hoje = new Date().toLocaleDateString('sv-SE');
+                // Setar data de hoje por padrão nos filtros (Horário Local Brasil)
+                const d = new Date();
+                const hoje = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                 document.getElementById('dash-inicio').value = hoje;
                 document.getElementById('dash-fim').value = hoje;
 
