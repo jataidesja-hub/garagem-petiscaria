@@ -839,28 +839,40 @@
         // CONFIGURAÇÃO VERCEL -> GOOGLE
         const URL_GAS = "https://script.google.com/macros/s/AKfycbwbape119VX_21t3b72mFBgRZ7mvrLv8Cg5QDHP5jDkQ-uoXZ93UxbH2b5B1j__n_gvsw/exec";
 
-        (function () {
-            if (typeof google !== 'undefined' && google.script) return;
-            const URL_GAS = "https://script.google.com/macros/s/AKfycbwbape119VX_21t3b72mFBgRZ7mvrLv8Cg5QDHP5jDkQ-uoXZ93UxbH2b5B1j__n_gvsw/exec";
-            function callGas(f, a, s, fl) {
-                fetch(URL_GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ function: f, args: a }) })
-                    .then(r => r.json()).then(res => {
-                        if (res && res.sucesso === false) {
-                            if (fl) fl({ message: res.erro || "Erro desconhecido no servidor" });
-                        } else if (s) {
-                            s(res);
+        // PONTE ESTRUTURAL (Vercel -> GAS)
+        if (typeof google === 'undefined' || !google.script) {
+            window.google = {
+                script: {
+                    run: new Proxy({}, {
+                        get: function (target, prop) {
+                            return function (...args) {
+                                let successHandler = null;
+                                let failureHandler = (err) => console.error("Erro GAS:", err);
+
+                                const runner = {
+                                    withSuccessHandler: function (cb) { successHandler = cb; return runner; },
+                                    withFailureHandler: function (eb) { failureHandler = eb; return runner; }
+                                };
+
+                                setTimeout(() => {
+                                    fetch(URL_GAS, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                        body: JSON.stringify({ function: prop, args: args }),
+                                        redirect: 'follow'
+                                    })
+                                        .then(r => r.json())
+                                        .then(res => { if (successHandler) successHandler(res); })
+                                        .catch(err => { if (failureHandler) failureHandler(err); });
+                                }, 10);
+
+                                return runner;
+                            };
                         }
                     })
-                    .catch(err => {
-                        if (fl) fl(err);
-                        console.error(err);
-                    });
-            }
-            function ProxyFactory(s, fl) {
-                return new Proxy({}, { get: (t, p) => { if (p === 'withSuccessHandler') return (cb) => ProxyFactory(cb, fl); if (p === 'withFailureHandler') return (fb) => ProxyFactory(s, fb); return (...args) => callGas(p, args, s, fl); } });
-            }
-            window.google = { script: { run: ProxyFactory() } };
-        })();
+                }
+            };
+        }
 
         let idAtivo = null, totalAtual = 0, consumoTotal = 0, estoqueCache = [], itensSessao = [];
         let modoPagamento = 'TOTAL';

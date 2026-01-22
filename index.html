@@ -849,67 +849,44 @@
         // COLE SEU LINK DO GOOGLE SCRIPT AQUI PARA FUNCIONAR NA VERCEL:
         const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec"; // EX: https://script.google.com/macros/s/.../exec
 
-        // PONTE ESTRUTURAL (NÃO MEXER)
+        // PONTE ESTRUTURAL (Vercel -> GAS)
         if (typeof google === 'undefined' || !google.script) {
-            console.log("Ambiente Externo Detectado (Vercel). Ativando ponte de conexão...");
             window.google = {
                 script: {
-                    run: {
-                        withSuccessHandler: function (callback) {
-                            this.callback = callback;
-                            return this;
-                        },
-                        withFailureHandler: function (fail) {
-                            this.fail = fail;
-                            return this;
-                        },
-                        // Proxy para capturar qualquer chamada de função
-                    }
+                    run: new Proxy({}, {
+                        get: function (target, prop) {
+                            return function (...args) {
+                                let successHandler = null;
+                                let failureHandler = (err) => console.error("Erro GAS:", err);
+
+                                const runner = {
+                                    withSuccessHandler: function (cb) { successHandler = cb; return runner; },
+                                    withFailureHandler: function (eb) { failureHandler = eb; return runner; }
+                                };
+
+                                // Executa a chamada na próxima volta do loop para garantir que os handlers foram registrados
+                                setTimeout(() => {
+                                    fetch(URL_GAS, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                        body: JSON.stringify({ function: prop, args: args }),
+                                        redirect: 'follow'
+                                    })
+                                        .then(r => r.json())
+                                        .then(res => {
+                                            if (successHandler) successHandler(res);
+                                        })
+                                        .catch(err => {
+                                            if (failureHandler) failureHandler(err);
+                                        });
+                                }, 10);
+
+                                return runner;
+                            };
+                        }
+                    })
                 }
             };
-
-            // Criar proxy para capturar as funções do Code.gs
-            const runProxy = new Proxy({}, {
-                get: function (target, prop) {
-                    return function (...args) {
-                        const callContext = {
-                            callback: null,
-                            fail: function (err) { console.error("Erro na Ponte GAS:", err); }
-                        };
-
-                        const runner = {
-                            withSuccessHandler: function (cb) {
-                                callContext.callback = cb;
-                                return runner;
-                            },
-                            withFailureHandler: function (f) {
-                                callContext.fail = f;
-                                return runner;
-                            }
-                        };
-
-                        // Executar a chamada após um pequeno delay para capturar os handlers
-                        setTimeout(() => {
-                            fetch(URL_GAS, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify({ function: prop, args: args }),
-                                redirect: 'follow'
-                            })
-                                .then(r => r.json())
-                                .then(res => {
-                                    if (callContext.callback) callContext.callback(res);
-                                })
-                                .catch(err => {
-                                    if (callContext.fail) callContext.fail(err);
-                                });
-                        }, 10);
-
-                        return runner;
-                    };
-                }
-            });
-            window.google.script.run = runProxy;
         }
 
         let estoqueCache = [], carrinhoVD = [], editingCode = null;
