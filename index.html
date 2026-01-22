@@ -869,21 +869,43 @@
             };
 
             // Criar proxy para capturar as funções do Code.gs
-            const runProxy = new Proxy(window.google.script.run, {
+            const runProxy = new Proxy({}, {
                 get: function (target, prop) {
-                    if (prop === 'withSuccessHandler' || prop === 'withFailureHandler' || prop === 'callback' || prop === 'fail') {
-                        return target[prop];
-                    }
                     return function (...args) {
-                        fetch(URL_GAS, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                            body: JSON.stringify({ function: prop, args: args }),
-                            redirect: 'follow'
-                        })
-                            .then(r => r.json())
-                            .then(res => { if (target.callback) target.callback(res); })
-                            .catch(err => { if (target.fail) target.fail(err); console.error("Erro na Ponte GAS:", err); });
+                        const callContext = {
+                            callback: null,
+                            fail: function (err) { console.error("Erro na Ponte GAS:", err); }
+                        };
+
+                        const runner = {
+                            withSuccessHandler: function (cb) {
+                                callContext.callback = cb;
+                                return runner;
+                            },
+                            withFailureHandler: function (f) {
+                                callContext.fail = f;
+                                return runner;
+                            }
+                        };
+
+                        // Executar a chamada após um pequeno delay para capturar os handlers
+                        setTimeout(() => {
+                            fetch(URL_GAS, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                body: JSON.stringify({ function: prop, args: args }),
+                                redirect: 'follow'
+                            })
+                                .then(r => r.json())
+                                .then(res => {
+                                    if (callContext.callback) callContext.callback(res);
+                                })
+                                .catch(err => {
+                                    if (callContext.fail) callContext.fail(err);
+                                });
+                        }, 10);
+
+                        return runner;
                     };
                 }
             });
@@ -1000,7 +1022,8 @@
 
                 // Renderizar Ranking de Produtos Agrupados por Categoria
                 let groupedHtml = "";
-                let cats = [...new Set(d.todosProdutos.map(p => p.categoria))].sort();
+                let todosProds = d.todosProdutos || [];
+                let cats = [...new Set(todosProds.map(p => p.categoria))].sort();
 
                 if (d.todosProdutos.length === 0) {
                     groupedHtml = '<p style="text-align:center; color:var(--text-muted)">Nenhuma venda registrada.</p>';
