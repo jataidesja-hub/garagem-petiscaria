@@ -436,17 +436,20 @@ function getDashboardData(inicio, fim) {
   let diasUnicos = new Set();
   let seriesHoras = {}; // Para o gráfico por hora
 
+  const startTime = inicio ? new Date(inicio + "T00:00:00-03:00").getTime() : 0;
+  const endTime = fim ? new Date(fim + "T23:59:59-03:00").getTime() : 4102444800000;
+
   if (data.length > 1) {
     data.slice(1).forEach((r) => {
       const d = parseDate(r[0]);
       if (!d) return;
 
+      const tDate = d.getTime();
+      
+      // FILTRO DE DATA POR TIMESTAMP (ROBUSTO)
+      if (tDate < startTime || tDate > endTime) return;
+      
       const dStr = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd");
-      
-      // FILTRO DE DATA
-      if (inicio && dStr < inicio) return;
-      if (fim && dStr > fim) return;
-      
       const cod = String(r[3]);
       const prodNome = String(r[4]);
       const q = Number(r[5]) || 0;
@@ -529,7 +532,8 @@ function getDashboardData(inicio, fim) {
     ranking: ranking,
     todosProdutos: todosProdutos,
     rankingCategorias: rankingCategorias,
-    seriesHoras: seriesHoras
+    seriesHoras: seriesHoras,
+    debug: { inicioRecebido: inicio, fimRecebido: fim, numVendasProcessadas: data.length - 1 }
   };
 }
 
