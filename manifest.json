@@ -1,21 +1,21 @@
 {
-  "name": "DEMONSTRAÇÃO",
-  "short_name": "DEMONSTRAÇÃO",
-  "description": "Portal de Acesso - DEMONSTRAÇÃO",
+  "name": "A GARAGEM",
+  "short_name": "A GARAGEM",
+  "description": "Sistema A GARAGEM - Bar e Restaurante",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#050508",
-  "theme_color": "#2196F3",
+  "theme_color": "#D4AF37",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/4862/4862562.png",
+      "src": "/icon-512.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/4862/4862562.png",
+      "src": "/icon-512.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
