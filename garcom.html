@@ -748,16 +748,11 @@
                 style="display:flex; gap: 4px; background: var(--glass); padding: 4px; border-radius: 12px; margin-bottom: 1.2rem;">
                 <button id="btn-pago-total" class="btn" style="padding: 10px; font-size: 0.75rem;"
                     onclick="setModoPagamento('TOTAL')">TOTAL</button>
-                <button id="btn-pago-parcial" class="btn" style="padding: 10px; font-size: 0.75rem;"
-                    onclick="setModoPagamento('ITENS')">ITENS</button>
                 <button id="btn-pago-abatimento" class="btn" style="padding: 10px; font-size: 0.75rem;"
                     onclick="setModoPagamento('ABATIMENTO')">VALOR</button>
             </div>
 
-            <div id="area-selecao-itens"
-                style="display:none; max-height: 25vh; overflow-y: auto; border: 1px solid var(--glass); border-radius: 15px; margin-bottom: 1rem; padding: 15px;">
-                <div id="lista-check-itens"></div>
-            </div>
+
 
             <div id="area-valor-avulso" style="display:none; text-align: center; margin-bottom: 1rem;">
                 <div
@@ -1310,17 +1305,8 @@
         function setModoPagamento(m) {
             modoPagamento = m;
             document.getElementById('btn-pago-total').className = m === 'TOTAL' ? 'btn btn-primary' : 'btn';
-            document.getElementById('btn-pago-parcial').className = m === 'ITENS' ? 'btn btn-primary' : 'btn';
             document.getElementById('btn-pago-abatimento').className = m === 'ABATIMENTO' ? 'btn btn-primary' : 'btn';
-            document.getElementById('area-selecao-itens').style.display = m === 'ITENS' ? 'block' : 'none';
             document.getElementById('area-valor-avulso').style.display = m === 'ABATIMENTO' ? 'block' : 'none';
-            if (m === 'ITENS') {
-                document.getElementById('lista-check-itens').innerHTML = itensSessao.map(i => `
-              <div style="display:flex; align-items:center; margin-bottom: 12px;">
-                <input type="checkbox" class="check-item" value="${i.codigo}" data-preco="${i.preco}" data-qtd="${i.qtd}" onchange="recalcParcial()">
-                <span>${i.nome} (${i.qtd}x)</span>
-              </div>`).join('');
-            }
             recalcParcial();
         }
 
@@ -1328,11 +1314,6 @@
             let valor = 0;
             if (modoPagamento === 'TOTAL') { valor = totalAtual; }
             else if (modoPagamento === 'ABATIMENTO') { valor = parseFloat(document.getElementById('input-valor-avulso').value) || 0; }
-            else {
-                document.querySelectorAll('.check-item:checked').forEach(ck => {
-                    valor += parseFloat(ck.getAttribute('data-preco')) * parseInt(ck.getAttribute('data-qtd'));
-                });
-            }
             document.getElementById('pag-total-l').innerText = 'R$ ' + valor.toFixed(2);
             document.getElementById('pag-valor').value = valor.toFixed(2);
             calcTroco();
@@ -1363,12 +1344,6 @@
 
             let itensPagar = [];
             if (modoPagamento === 'TOTAL') itensPagar = itensSessao;
-            else if (modoPagamento === 'ITENS') {
-                document.querySelectorAll('.check-item:checked').forEach(ck => {
-                    let it = itensSessao.find(x => x.codigo === ck.value);
-                    itensPagar.push(it);
-                });
-            }
 
             let m = document.getElementById('pag-metodo').value;
             let clie = document.getElementById('pag-cliente').value;
@@ -1379,7 +1354,7 @@
                 pago: parseFloat(document.getElementById('pag-valor').value) || 0,
                 troco: parseFloat(document.getElementById('pag-troco').innerText.replace('R$ ', '')),
                 itens: itensPagar,
-                isParcial: (modoPagamento === 'ITENS' || modoPagamento === 'ABATIMENTO'),
+                isParcial: (modoPagamento === 'ABATIMENTO'),
                 isAbatimento: (modoPagamento === 'ABATIMENTO')
             };
 
