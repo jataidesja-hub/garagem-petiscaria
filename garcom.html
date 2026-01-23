@@ -1183,6 +1183,7 @@
             if (!idAtivo) return;
             google.script.run.withSuccessHandler(itens => {
                 if (!Array.isArray(itens)) return;
+                totalAtual = 0; consumoTotal = 0; itensSessao = itens;
                 let produtos = itens.filter(i => {
                     let cat = (i.category || i.categoria || '').toUpperCase();
                     return cat !== 'PAGAMENTO' && cat !== 'VENDA' && i.codigo !== 'PAG_AVULSO';
