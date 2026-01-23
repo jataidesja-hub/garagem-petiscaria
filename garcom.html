@@ -1196,7 +1196,7 @@
                 let pagamentos = itens.filter(i => {
                     let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
-                    return (cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO') && i.total != 0;
+                    return (cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO' || i.codigo === 'PAG_FINAL') && i.total != 0;
                 });
 
                 let html = produtos.map(i => {
@@ -1391,6 +1391,8 @@
                         prepararCupom(dados);
                         fecharModais();
                         document.getElementById('pag-cliente').value = '';
+                        document.getElementById('pag-total-l').innerText = 'R$ 0.00';
+                        document.getElementById('pag-valor').value = '';
                     });
                 } else { showToast("Erro: " + res.erro, "error"); }
             }).finalizarVenda(dados);
