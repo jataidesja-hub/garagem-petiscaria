@@ -1183,9 +1183,14 @@
             if (!idAtivo) return;
             google.script.run.withSuccessHandler(itens => {
                 if (!Array.isArray(itens)) return;
-                totalAtual = 0; consumoTotal = 0; itensSessao = itens;
-                let produtos = itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
-                let pagamentos = itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
+                let produtos = itens.filter(i => {
+                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    return cat !== 'PAGAMENTO' && cat !== 'VENDA' && i.codigo !== 'PAG_AVULSO';
+                });
+                let pagamentos = itens.filter(i => {
+                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    return cat === 'PAGAMENTO' || i.codigo === 'PAG_AVULSO';
+                });
 
                 let html = produtos.map(i => {
                     totalAtual += i.total;
@@ -1218,7 +1223,7 @@
                         totalAtual += p.total;
                         html += `<tr style="color:var(--success)">
                             <td><i class="fas fa-check-circle"></i> ${p.nome}</td>
-                            <td align="right">R$ ${p.total.toFixed(2)}</td>
+                            <td align="right">R$ ${Math.abs(p.total).toFixed(2)}</td>
                         </tr>`;
                     });
                 }
@@ -1375,8 +1380,15 @@
             document.getElementById('cupom-mesa').innerText = mesa;
             document.getElementById('cupom-data-hora').innerText = new Date().toLocaleString('pt-BR', { timeZone: 'America/Bahia' });
 
-            let produtos = dados.itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
-            let pagamentos = dados.itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
+            // Garantir filtragem correta no cupom
+            let produtos = dados.itens.filter(i => {
+                let cat = (i.category || i.categoria || '').toUpperCase();
+                return cat !== 'PAGAMENTO' && cat !== 'VENDA' && i.codigo !== 'PAG_AVULSO';
+            });
+            let pagamentosAnteriores = dados.itens.filter(i => {
+                let cat = (i.category || i.categoria || '').toUpperCase();
+                return cat === 'PAGAMENTO' || i.codigo === 'PAG_AVULSO';
+            });
 
             let totalConsumo = 0;
             let htmlItens = produtos.map(i => {
@@ -1385,21 +1397,23 @@
                 return `<tr><td>${i.nome} (${i.qtd}x)</td><td align="right">R$ ${sub.toFixed(2)}</td></tr>`;
             }).join('');
 
-            if (pagamentos.length > 0) {
+            if (pagamentosAnteriores.length > 0) {
                 htmlItens += `<tr><td colspan="2" style="border-top:1px dashed #000; font-weight:bold; font-size:10px; padding-top:5px;">PAGAMENTOS ANTERIORES:</td></tr>`;
-                htmlItens += pagamentos.map(p => `<tr><td>${p.nome}</td><td align="right">R$ ${p.total.toFixed(2)}</td></tr>`).join('');
+                htmlItens += pagamentosAnteriores.map(p => `<tr><td>${p.nome}</td><td align="right">R$ ${Math.abs(p.total).toFixed(2)}</td></tr>`).join('');
             }
 
             if (dados.isAbatimento) {
-                htmlItens += `<tr><td style="border-top:1px solid #000; font-weight:bold">NOVO PAGAMENTO:</td><td align="right" style="border-top:1px solid #000; font-weight:bold">R$ ${dados.total.toFixed(2)}</td></tr>`;
+                htmlItens += `<tr><td style="border-top:1px solid #000; font-weight:bold">NOVO PAGAMENTO (PARCIAL):</td><td align="right" style="border-top:1px solid #000; font-weight:bold">R$ ${dados.total.toFixed(2)}</td></tr>`;
             }
 
             document.getElementById('cupom-itens').innerHTML = htmlItens;
 
-            // Se for fechamento total, o TOTAL do cupom deve ser o consumo total real
+            // Lógica de total exibido:
+            // Se for parcial, mostra o valor que está sendo pago agora.
+            // Se for fechamento total, mostra o consumo total real da mesa.
             let totalExibir = dados.isParcial ? dados.total : totalConsumo;
             document.getElementById('cupom-total').innerText = 'R$ ' + totalExibir.toFixed(2);
-            document.getElementById('cupom-forma').innerText = (pagamentos.length > 0 && !dados.isParcial) ? "Misto / Final: " + dados.forma : dados.forma;
+            document.getElementById('cupom-forma').innerText = (pagamentosAnteriores.length > 0 && !dados.isParcial) ? "Misto / Final: " + dados.forma : dados.forma;
 
             userConfirm("Venda Concluída", "Deseja imprimir o cupom agora?", () => window.print());
         }

@@ -1164,8 +1164,14 @@
 
             google.script.run.withSuccessHandler(itens => {
                 let t = 0;
-                let produtos = itens.filter(i => (i.categoria || '').toUpperCase() !== 'PAGAMENTO');
-                let pagamentos = itens.filter(i => (i.categoria || '').toUpperCase() === 'PAGAMENTO');
+                let produtos = itens.filter(i => {
+                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    return cat !== 'PAGAMENTO' && cat !== 'VENDA' && i.codigo !== 'PAG_AVULSO';
+                });
+                let pagamentos = itens.filter(i => {
+                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    return cat === 'PAGAMENTO' || i.codigo === 'PAG_AVULSO';
+                });
 
                 let html = produtos.map(i => {
                     t += i.total;
@@ -1176,7 +1182,7 @@
                     html += `<tr><td colspan="3" style="padding-top:10px; border-bottom:1px solid #000; font-weight:bold; font-size:10px;">PAGAMENTOS REALIZADOS:</td></tr>`;
                     pagamentos.forEach(p => {
                         t += p.total;
-                        html += `<tr style="color:#28a745"><td>${p.nome}</td><td></td><td align="right">R$ ${p.total.toFixed(2)}</td></tr>`;
+                        html += `<tr style="color:#28a745"><td>${p.nome}</td><td></td><td align="right">R$ ${Math.abs(p.total).toFixed(2)}</td></tr>`;
                     });
                 }
 

@@ -243,9 +243,19 @@ function buscarItensComanda(idComanda) {
     const shV = getOrCreateSheet(ABA_VENDAS);
     const dataV = shV.getDataRange().getValues();
     if (dataV.length > 1) {
-      itens = dataV.filter(r => String(r[2]) === String(idComanda)).map(r => ({
-        codigo: String(r[3]), nome: String(r[4]), qtd: Number(r[5]), preco: Number(r[6]), total: Number(r[7]), categoria: 'Venda'
-      }));
+      itens = dataV.filter(r => String(r[2]) === String(idComanda)).map(r => {
+        let cod = String(r[3]);
+        let tipo = String(r[1]);
+        let cat = (cod === 'PAG_AVULSO' || tipo === 'ABATIMENTO') ? 'PAGAMENTO' : 'Venda';
+        return {
+          codigo: cod, 
+          nome: String(r[4]), 
+          qtd: Number(r[5]), 
+          preco: Number(r[6]), 
+          total: Number(r[7]), 
+          categoria: cat
+        };
+      });
     }
   }
   
