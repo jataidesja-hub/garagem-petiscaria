@@ -342,19 +342,19 @@ function finalizarVenda(dados) {
       // Adicionar item negativo na comanda para reduzir saldo pendente
       shItens.appendRow([idStr, 'PAGAMENTO', 'Pagamento Parcial: ' + dados.forma, 1, -dados.total, -dados.total, 0, 'Autogerado', 'PAGAMENTO', 'CONCLUIDO', new Date()]);
     } else {
-      dados.itens.forEach(it => {
         // Registrar item no histórico de vendas (caixa)
-        // Se for um registro de PAGAMENTO anterior, ele entra como negativo para ajustar o saldo deste fechamento
-        // Isso garante que o Total do Caixa (Soma de ABA_VENDAS) bata com o dinheiro real recebido hoje.
-        shVend.appendRow([new Date(), dados.tipo, idStr, it.codigo, it.nome, it.qtd, it.preco, it.total, 0, it.total, dados.forma, it.pagoItem || it.total, 0]);
-        
-        if (dados.tipo === "VENDA_DIRETA") processarBaixaUnica(String(it.codigo), Number(it.qtd));
-        
-        // Se for comanda, remover os produtos reais da lista de itens em aberto
-        if (dados.tipo === "COMANDA" && (it.categoria || '').toUpperCase() !== 'PAGAMENTO') {
-           removerParcialItem(idStr, it.codigo, it.qtd);
+        // Se for um registro de PAGAMENTO anterior, NÃO registramos novamente no caixa
+        // pois ele já foi registrado como 'ABATIMENTO' no momento em que ocorreu.
+        if ((it.categoria || '').toUpperCase() !== 'PAGAMENTO') {
+          shVend.appendRow([new Date(), dados.tipo, idStr, it.codigo, it.nome, it.qtd, it.preco, it.total, 0, it.total, dados.forma, it.pagoItem || it.total, 0]);
+          
+          if (dados.tipo === "VENDA_DIRETA") processarBaixaUnica(String(it.codigo), Number(it.qtd));
+          
+          // Se for comanda, remover os produtos reais da lista de itens em aberto
+          if (dados.tipo === "COMANDA") {
+             removerParcialItem(idStr, it.codigo, it.qtd);
+          }
         }
-      });
       
       // Limpar os registros de PAGAMENTO da comanda após o fechamento TOTAL
       if (dados.tipo === "COMANDA") {

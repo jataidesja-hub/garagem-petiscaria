@@ -1185,12 +1185,12 @@
                 if (!Array.isArray(itens)) return;
                 totalAtual = 0; consumoTotal = 0; itensSessao = itens;
                 let produtos = itens.filter(i => {
-                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
                     return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO';
                 });
                 let pagamentos = itens.filter(i => {
-                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
                     return cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO';
                 });
@@ -1387,12 +1387,12 @@
 
             // Garantir filtragem estrita no cupom
             let produtos = dados.itens.filter(i => {
-                let cat = (i.category || i.categoria || '').toUpperCase();
+                let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                 let nome = (i.nome || '').toUpperCase();
                 return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO';
             });
             let pagamentosAnteriores = dados.itens.filter(i => {
-                let cat = (i.category || i.categoria || '').toUpperCase();
+                let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                 let nome = (i.nome || '').toUpperCase();
                 return cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO';
             });
