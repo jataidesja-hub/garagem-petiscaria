@@ -744,17 +744,7 @@
     <div id="modalPagamento" class="overlay" style="z-index: 2500;">
         <div class="modal-sheet">
             <h3 style="text-align:center; margin-bottom: 1.5rem;">💰 Recebimento</h3>
-            <div
-                style="display:flex; gap: 4px; background: var(--glass); padding: 4px; border-radius: 12px; margin-bottom: 1.2rem;">
-                <button id="btn-pago-total" class="btn" style="padding: 10px; font-size: 0.75rem;"
-                    onclick="setModoPagamento('TOTAL')">TOTAL</button>
-                <button id="btn-pago-abatimento" class="btn" style="padding: 10px; font-size: 0.75rem;"
-                    onclick="setModoPagamento('ABATIMENTO')">VALOR</button>
-            </div>
-
-
-
-            <div id="area-valor-avulso" style="display:none; text-align: center; margin-bottom: 1rem;">
+            <div id="area-valor-avulso" style="display:block; text-align: center; margin-bottom: 1rem;">
                 <div
                     style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid var(--glass);">
                     <div style="text-align: left;">
@@ -1384,10 +1374,15 @@
         }
 
         function abrirPagamento() {
-            setModoPagamento('TOTAL');
+            modoPagamento = 'ABATIMENTO';
             document.getElementById('modalPagamento').style.display = 'flex';
-            document.getElementById('input-valor-avulso').value = '';
+            document.getElementById('input-valor-avulso').value = totalAtual.toFixed(2);
+            document.getElementById('split-people').value = 1;
             ajustarCampos();
+            recalcParcial();
+            setTimeout(() => {
+                document.getElementById('input-valor-avulso').select();
+            }, 100);
         }
 
         function finalizarFinal() {
