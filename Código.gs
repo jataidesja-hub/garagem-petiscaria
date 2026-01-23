@@ -249,7 +249,8 @@ function buscarItensComanda(idComanda) {
         let cat = (cod === 'PAG_AVULSO' || tipo === 'ABATIMENTO') ? 'PAGAMENTO' : 'Venda';
         let val = Number(r[7]);
         // Se for um pagamento (entrada no caixa), no contexto da comanda ele é um ABATIMENTO (negativo)
-        if (cat === 'PAGAMENTO') val = -Math.abs(val);
+        // Se o valor já for negativo, é um ajuste de fechamento, mantemos como está para cancelar o original
+        if (cat === 'PAGAMENTO' && val > 0) val = -val;
         
         return {
           codigo: cod, 
@@ -259,6 +260,28 @@ function buscarItensComanda(idComanda) {
           total: val, 
           categoria: cat
         };
+      });
+    }
+  }
+
+  // Se a comanda estiver FECHADA, precisamos incluir o pagamento final que está no cabeçalho
+  // para que o saldo mostrado no visor seja zero.
+  const shCom = getOrCreateSheet(ABA_COMANDAS);
+  const dataCom = shCom.getDataRange().getValues();
+  let comandaHeader = dataCom.find(r => String(r[0]) === String(idComanda));
+  
+  if (comandaHeader && comandaHeader[4] === 'FECHADA') {
+    let forma = comandaHeader[8] || "Não informada";
+    let valorPagoFinal = Number(comandaHeader[9]) || 0;
+    
+    if (valorPagoFinal > 0) {
+      itens.push({
+        codigo: 'PAG_FINAL',
+        nome: 'Pagamento Final: ' + forma,
+        qtd: 1,
+        preco: valorPagoFinal,
+        total: -valorPagoFinal, // Negativo para abater no visor
+        categoria: 'PAGAMENTO'
       });
     }
   }

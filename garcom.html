@@ -1183,21 +1183,26 @@
             if (!idAtivo) return;
             google.script.run.withSuccessHandler(itens => {
                 if (!Array.isArray(itens)) return;
-                totalAtual = 0; consumoTotal = 0; itensSessao = itens;
+
+                let _total = 0;
+                let _consumo = 0;
+                let _itensSessao = itens;
+
                 let produtos = itens.filter(i => {
                     let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
-                    return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO';
+                    return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO' && i.total > 0;
                 });
                 let pagamentos = itens.filter(i => {
                     let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
-                    return cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO';
+                    return (cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO') && i.total != 0;
                 });
 
                 let html = produtos.map(i => {
-                    totalAtual += i.total;
-                    consumoTotal += i.total;
+                    let sub = Math.abs(i.total);
+                    _total += sub;
+                    _consumo += sub;
                     return `<tr>
                         <td>
                             <b>${i.nome}</b> ${i.garcom ? `<small style="font-size:0.6rem; background:rgba(212,175,55,0.1); padding:2px 5px; border-radius:5px; color:var(--primary)">👤 ${i.garcom}</small>` : ''}<br>
@@ -1206,7 +1211,7 @@
                         </td>
                         <td align="right">
                             <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end">
-                                <span style="margin-right:8px">R$ ${i.total.toFixed(2)}</span>
+                                <span style="margin-right:8px">R$ ${sub.toFixed(2)}</span>
                                 ${!isFechada ? `
                                     <div style="display:flex; gap:2px">
                                         <button class="btn-del" onclick="removerItem('${i.codigo}')${isBackground ? ', true' : ''}" 
@@ -1222,17 +1227,28 @@
 
                 if (pagamentos.length > 0) {
                     html += `<tr><td colspan="2" style="padding-top:15px; border-bottom:1px solid var(--primary); color:var(--primary); font-size:0.8rem; font-weight:700">PAGAMENTOS JÁ REALIZADOS</td></tr>`;
+                    let pgsVistos = new Set();
                     pagamentos.forEach(p => {
-                        totalAtual += p.total;
-                        html += `<tr style="color:var(--success)">
-                            <td><i class="fas fa-check-circle"></i> ${p.nome}</td>
-                            <td align="right">R$ ${Math.abs(p.total).toFixed(2)}</td>
-                        </tr>`;
+                        let v = Math.abs(p.total);
+                        let chave = p.nome + "_" + v.toFixed(2);
+                        if (!pgsVistos.has(chave)) {
+                            _total += p.total;
+                            html += `<tr style="color:var(--success)">
+                               <td><i class="fas fa-check-circle"></i> ${p.nome}</td>
+                               <td align="right">R$ -${v.toFixed(2)}</td>
+                           </tr>`;
+                            pgsVistos.add(chave);
+                        }
                     });
                 }
 
+                // Sincronizar estado global apenas no final
+                totalAtual = _total;
+                consumoTotal = _consumo;
+                itensSessao = _itensSessao;
+
                 document.getElementById('tabela-itens').innerHTML = html || '<tr><td colspan="2" align="center">Vazio</td></tr>';
-                document.getElementById('view-total').innerText = 'Saldo Aberto: R$ ' + totalAtual.toFixed(2);
+                document.getElementById('view-total').innerText = (isFechada ? 'Faturado: R$ ' : 'Saldo Aberto: R$ ') + Math.max(0, totalAtual).toFixed(2);
             }).buscarItensComanda(idAtivo);
         }
 
