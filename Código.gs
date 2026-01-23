@@ -208,79 +208,77 @@ function buscarItensComanda(idComanda) {
   const sh = getOrCreateSheet(ABA_COMANDA_ITENS);
   const data = sh.getDataRange().getValues();
   let itens = [];
+  let agrupados = {};
   
+  // 1. Pegar itens da comanda atual (em aberto)
   if (idComanda && data.length > 1) {
-    // Pegamos todos os itens da comanda
     const rawItens = data.slice(1).filter(r => String(r[0]) === String(idComanda));
-    
-    // Mapeamos e AGRUPAMOS para o garçom ver a soma (ex: 3x Cerveja)
-    // Se houver observação diferente, mantemos separado para clareza
-    let agrupados = {};
     rawItens.forEach(r => {
       let cod = String(r[1]);
       let cat = String(r[8] || '');
-      let chave = (cat === 'PAGAMENTO' || cat === 'Venda') ? (cod + Math.random()) : (cod + "_" + (r[7] || ''));
+      // Agrupar produtos, mas manter pagamentos/avulsos separados
+      let chave = (cat === 'PAGAMENTO' || cod === 'PAG_AVULSO') ? (cod + Math.random()) : (cod + "_" + (r[7] || ''));
       
       if (!agrupados[chave]) {
         agrupados[chave] = {
-          codigo: cod,
-          nome: String(r[2]),
-          qtd: 0,
-          preco: Number(r[4]),
-          total: 0,
-          categoria: cat,
-          obs: String(r[7] || ''),
-          garcom: String(r[11] || '')
+          codigo: cod, nome: String(r[2]), qtd: 0, preco: Number(r[4]), total: 0,
+          categoria: cat, obs: String(r[7] || ''), garcom: String(r[11] || '')
         };
       }
       agrupados[chave].qtd += Number(r[3]);
       agrupados[chave].total += Number(r[5]);
     });
-    itens = Object.values(agrupados);
   }
 
-  if (idComanda && itens.length === 0) {
-    const shV = getOrCreateSheet(ABA_VENDAS);
-    const dataV = shV.getDataRange().getValues();
-    if (dataV.length > 1) {
-      itens = dataV.filter(r => String(r[2]) === String(idComanda)).map(r => {
+  // 2. Buscar também no histórico de vendas (vendas parciais/abatimentos/produtos de fechadas)
+  const shV = getOrCreateSheet(ABA_VENDAS);
+  const dataV = shV.getDataRange().getValues();
+  if (dataV.length > 1) {
+    dataV.slice(1).forEach(r => {
+      if (String(r[2]) === String(idComanda)) {
         let cod = String(r[3]);
         let tipo = String(r[1]);
-        let cat = (cod === 'PAG_AVULSO' || tipo === 'ABATIMENTO') ? 'PAGAMENTO' : 'Venda';
         let val = Number(r[7]);
-        // Se for um pagamento (entrada no caixa), no contexto da comanda ele é um ABATIMENTO (negativo)
-        // Se o valor já for negativo, é um ajuste de fechamento, mantemos como está para cancelar o original
-        if (cat === 'PAGAMENTO' && val > 0) val = -val;
         
-        return {
-          codigo: cod, 
-          nome: String(r[4]), 
-          qtd: Number(r[5]), 
-          preco: Number(r[6]), 
-          total: val, 
-          categoria: cat
-        };
-      });
-    }
-  }
+        // IGNORAR entradas negativas no histórico de vendas. 
+        // Elas são apenas ajustes de fechamento para bater o caixa.
+        if (val <= 0) return;
+        
+        let cat = (cod === 'PAG_AVULSO' || tipo === 'ABATIMENTO') ? 'PAGAMENTO' : 'Venda';
+        let chave = (cat === 'PAGAMENTO') ? (cod + Math.random()) : (cod + "_" + (r[8] || ''));
 
-  // Se a comanda estiver FECHADA, precisamos incluir o pagamento final que está no cabeçalho
-  // para que o saldo mostrado no visor seja zero.
+        if (!agrupados[chave]) {
+           agrupados[chave] = {
+             codigo: cod, nome: String(r[4]), qtd: 0, preco: Number(r[6]), total: 0,
+             categoria: cat, obs: "", garcom: ""
+           };
+        }
+        agrupados[chave].qtd += Number(r[5]);
+        
+        // Se for pagamento, ele reduz o saldo (negativo)
+        if (cat === 'PAGAMENTO') {
+           agrupados[chave].total -= val;
+        } else {
+           agrupados[chave].total += val;
+        }
+      }
+    });
+  }
+  
+  itens = Object.values(agrupados);
+
+  // 3. Incluir o Pagamento Final do cabeçalho se houver
   const shCom = getOrCreateSheet(ABA_COMANDAS);
   const dataCom = shCom.getDataRange().getValues();
   let comandaHeader = dataCom.find(r => String(r[0]) === String(idComanda));
   
-  if (comandaHeader && comandaHeader[4] === 'FECHADA') {
-    let forma = comandaHeader[8] || "Não informada";
+  if (comandaHeader) {
     let valorPagoFinal = Number(comandaHeader[9]) || 0;
-    
     if (valorPagoFinal > 0) {
       itens.push({
         codigo: 'PAG_FINAL',
-        nome: 'Pagamento Final: ' + forma,
-        qtd: 1,
-        preco: valorPagoFinal,
-        total: -valorPagoFinal, // Negativo para abater no visor
+        nome: 'Pagamento Final: ' + (comandaHeader[8] || 'Dinheiro'),
+        qtd: 1, preco: valorPagoFinal, total: -valorPagoFinal,
         categoria: 'PAGAMENTO'
       });
     }
@@ -366,8 +364,8 @@ function finalizarVenda(dados) {
     if (isAbatimento) {
       // Registrar abate como item positivo no caixa (entrada de dinheiro)
       shVend.appendRow([new Date(), 'ABATIMENTO', idStr, 'PAG_AVULSO', 'Pagamento Parcial (Abatimento)', 1, dados.total, dados.total, 0, dados.total, dados.forma, dados.total, 0]);
-      // Adicionar item negativo na comanda para reduzir saldo pendente
-      shItens.appendRow([idStr, 'PAGAMENTO', 'Pagamento Parcial: ' + dados.forma, 1, -dados.total, -dados.total, 0, 'Autogerado', 'PAGAMENTO', 'CONCLUIDO', new Date()]);
+      // Não precisamos mais escrever em shItens para reduzir saldo, 
+      // pois buscarItensComanda agora unifica VENDAS e ITENS por ID.
     } else {
       dados.itens.forEach(it => {
         // Registrar item no histórico de vendas (caixa)
@@ -408,7 +406,8 @@ function finalizarVenda(dados) {
         });
 
         // No histórico de comandas, queremos ver o valor TOTAL da conta fechada
-        shCom.getRange(rowIndex, 5, 1, 7).setValues([['FECHADA', consumoReal, 0, consumoReal, dados.forma, consumoReal, dados.troco]]);
+        // mas o campo "Pago" deve refletir apenas o valor pago NESTE momento de fechamento
+        shCom.getRange(rowIndex, 5, 1, 7).setValues([['FECHADA', consumoReal, 0, consumoReal, dados.forma, dados.total, dados.troco]]);
         if (dados.cliente) {
           shCom.getRange(rowIndex, 3).setValue(dados.cliente);
         }
