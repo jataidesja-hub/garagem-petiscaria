@@ -854,31 +854,33 @@
     </div>
 
     <!-- ESTRUTURA PARA IMPRESSÃO -->
-    <div id="cupom-print" style="display:none; font-family: 'Courier New', Courier, monospace; line-height: 1.2;">
-        <div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 10px;">
-            <h2 style="margin:0; text-transform: uppercase;">A GARAGEM BAR E RESTAURANTE LTDA</h2>
-            <p style="margin:2px 0; font-size: 0.75rem;">CNPJ: 14.967.305/0001-23</p>
-            <p style="margin:5px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0;">RECIBO
-                DE PAGAMENTO</p>
-            <p style="font-size: 1.1rem; margin: 10px 0;"><b>MESA: <span id="cupom-mesa"></span></b></p>
-            <p style="font-size: 0.8rem;" id="cupom-data-hora"></p>
+    <div id="cupom-print" style="display:none; font-family: 'Courier New', Courier, monospace; line-height: 1.0;">
+        <div style="text-align:center; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 5px;">
+            <h2 style="margin:0; text-transform: uppercase; font-size: 1.2rem;">A GARAGEM BAR E RESTAURANTE</h2>
+            <p style="margin:1px 0; font-size: 0.65rem;">CNPJ: 14.967.305/0001-23</p>
+            <p
+                style="margin:3px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 0; font-size: 0.75rem;">
+                RECIBO DE PAGAMENTO</p>
+            <p style="font-size: 1.0rem; margin: 5px 0;"><b>MESA: <span id="cupom-mesa"></span></b></p>
+            <p style="font-size: 0.7rem;" id="cupom-data-hora"></p>
         </div>
-        <table style="width:100%; border-bottom: 1px dashed #000; margin: 10px 0; font-size: 0.9rem;">
+        <table
+            style="width:100%; border-bottom: 1px dashed #000; margin: 5px 0; font-size: 0.8rem; border-collapse: collapse;">
             <thead>
                 <tr>
-                    <th align="left">ITEM</th>
-                    <th align="right">VALOR</th>
+                    <th align="left" style="border-bottom: 1px solid #000; padding: 2px 0;">ITEM</th>
+                    <th align="right" style="border-bottom: 1px solid #000; padding: 2px 0;">VALOR</th>
                 </tr>
             </thead>
             <tbody id="cupom-itens"></tbody>
         </table>
-        <div style="text-align: right; padding-top: 5px;">
-            <p style="font-size: 1.1rem;"><b>TOTAL: <span id="cupom-total"></span></b></p>
-            <p style="font-size: 0.9rem;">FORMA: <span id="cupom-forma"></span></p>
+        <div style="text-align: right; padding-top: 2px;">
+            <div id="cupom-total"></div>
+            <p style="font-size: 0.8rem; margin: 2px 0;">FORMA: <span id="cupom-forma"></span></p>
         </div>
-        <div style="text-align:center; margin-top: 40px; border-top: 1px solid #000; padding-top: 10px;">
-            <p style="font-size: 0.8rem;">J.A SOFTWARE & SOLUTION</p>
-            <p style="font-size: 0.7rem; margin-top: 5px;">Obrigado pela preferência!</p>
+        <div style="text-align:center; margin-top: 20px; border-top: 1px solid #000; padding-top: 5px;">
+            <p style="font-size: 0.7rem; margin: 0;">J.A SOFTWARE & SOLUTION</p>
+            <p style="font-size: 0.6rem; margin-top: 2px;">Obrigado pela preferência!</p>
             <div style="margin-top: 15px; border-top: 1px dotted #000; padding-top: 5px; font-size: 8px; opacity: 0.8;">
                 Developed by: J.A Software & Solution<br>
                 (87) 9 8143-6052
@@ -1414,8 +1416,8 @@
             google.script.run.withSuccessHandler(res => {
                 if (res.sucesso) {
                     mostrarFinalizado("Venda Concluída!", () => {
-                        prepararCupom(dados);
                         if (isFullPayment) {
+                            prepararCupom(dados);
                             fecharModais();
                         } else {
                             // Se for abate, manter modal aberto, atualizar dados e campos
@@ -1457,7 +1459,7 @@
             let htmlItens = produtos.map(i => {
                 let sub = Math.abs(i.total);
                 totalConsumo += sub;
-                return `<tr><td>${i.nome} (${i.qtd}x)</td><td align="right">R$ ${sub.toFixed(2)}</td></tr>`;
+                return `<tr><td style="padding:1px 0;">${i.nome} (${i.qtd}x)</td><td align="right" style="padding:1px 0;">R$ ${sub.toFixed(2)}</td></tr>`;
             }).join('');
 
             let totalPagoAnterior = 0;
@@ -1470,7 +1472,7 @@
                     let chave = p.nome + "_" + v.toFixed(2);
                     if (!pgsVistos.has(chave)) {
                         totalPagoAnterior += v;
-                        htmlItens += `<tr><td>${p.nome}</td><td align="right">R$ -${v.toFixed(2)}</td></tr>`;
+                        htmlItens += `<tr><td style="padding:1px 0;">${p.nome}</td><td align="right" style="padding:1px 0;">R$ -${v.toFixed(2)}</td></tr>`;
                         pgsVistos.add(chave);
                     }
                 });
@@ -1487,10 +1489,10 @@
             if (!dados.isParcial && !dados.isAbatimento) totalPagoGeral = totalConsumo;
 
             let htmlTotal = `
-              <div style="border-top:2px solid #000; padding-top:5px; margin-top:10px;">
-                <p style="font-size: 0.85rem; display:flex; justify-content:space-between;"><span>TOTAL DA CONTA:</span> <b>R$ ${totalConsumo.toFixed(2)}</b></p>
-                <p style="font-size: 0.85rem; display:flex; justify-content:space-between;"><span>TOTAL PAGO:</span> <b>R$ -${totalPagoGeral.toFixed(2)}</b></p>
-                <p style="font-size: 1.1rem; display:flex; justify-content:space-between; margin-top:5px; border-top:1px solid #000; padding-top:5px;"><span>A PAGAR:</span> <b>R$ ${Math.max(0, totalConsumo - totalPagoGeral).toFixed(2)}</b></p>
+              <div style="border-top:1px solid #000; padding-top:3px; margin-top:5px;">
+                <p style="font-size: 0.75rem; display:flex; justify-content:space-between; margin:2px 0;"><span>TOTAL CONTA:</span> <b>R$ ${totalConsumo.toFixed(2)}</b></p>
+                <p style="font-size: 0.75rem; display:flex; justify-content:space-between; margin:2px 0;"><span>TOTAL PAGO:</span> <b>R$ -${totalPagoGeral.toFixed(2)}</b></p>
+                <p style="font-size: 0.95rem; display:flex; justify-content:space-between; margin:3px 0; border-top:1px dashed #000; padding-top:3px;"><span>A PAGAR:</span> <b>R$ ${Math.max(0, totalConsumo - totalPagoGeral).toFixed(2)}</b></p>
               </div>`;
 
             document.getElementById('cupom-total').innerHTML = htmlTotal;
