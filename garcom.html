@@ -1186,7 +1186,8 @@
                 totalAtual = 0; consumoTotal = 0; itensSessao = itens;
                 let produtos = itens.filter(i => {
                     let cat = (i.category || i.categoria || '').toUpperCase();
-                    return cat !== 'PAGAMENTO' && cat !== 'VENDA' && i.codigo !== 'PAG_AVULSO';
+                    // 'VENDA' é a categoria usada para itens de comandas fechadas
+                    return cat !== 'PAGAMENTO' && i.codigo !== 'PAG_AVULSO';
                 });
                 let pagamentos = itens.filter(i => {
                     let cat = (i.category || i.categoria || '').toUpperCase();
@@ -1290,9 +1291,11 @@
         function reimprimirCupom() {
             let dados = {
                 id: idAtivo,
+                // Usamos o total que já está na tela ou buscamos dos itens
                 total: totalAtual,
                 itens: itensSessao,
                 forma: "Reimpressão",
+                isParcial: false,
                 isAbatimento: false
             };
             prepararCupom(dados);
@@ -1384,7 +1387,7 @@
             // Garantir filtragem correta no cupom
             let produtos = dados.itens.filter(i => {
                 let cat = (i.category || i.categoria || '').toUpperCase();
-                return cat !== 'PAGAMENTO' && cat !== 'VENDA' && i.codigo !== 'PAG_AVULSO';
+                return cat !== 'PAGAMENTO' && i.codigo !== 'PAG_AVULSO';
             });
             let pagamentosAnteriores = dados.itens.filter(i => {
                 let cat = (i.category || i.categoria || '').toUpperCase();
@@ -1398,9 +1401,13 @@
                 return `<tr><td>${i.nome} (${i.qtd}x)</td><td align="right">R$ ${sub.toFixed(2)}</td></tr>`;
             }).join('');
 
+            let totalPagoAnterior = 0;
             if (pagamentosAnteriores.length > 0) {
-                htmlItens += `<tr><td colspan="2" style="border-top:1px dashed #000; font-weight:bold; font-size:10px; padding-top:5px;">PAGAMENTOS ANTERIORES:</td></tr>`;
-                htmlItens += pagamentosAnteriores.map(p => `<tr><td>${p.nome}</td><td align="right">R$ ${Math.abs(p.total).toFixed(2)}</td></tr>`).join('');
+                htmlItens += `<tr><td colspan="2" style="border-top:1px dashed #000; font-weight:bold; font-size:10px; padding-top:5px;">PAGAMENTOS REALIZADOS:</td></tr>`;
+                pagamentosAnteriores.forEach(p => {
+                    totalPagoAnterior += Math.abs(p.total);
+                    htmlItens += `<tr><td>${p.nome}</td><td align="right">R$ ${Math.abs(p.total).toFixed(2)}</td></tr>`;
+                });
             }
 
             if (dados.isAbatimento) {
@@ -1410,10 +1417,21 @@
             document.getElementById('cupom-itens').innerHTML = htmlItens;
 
             // Lógica de total exibido:
-            // Se for parcial, mostra o valor que está sendo pago agora.
-            // Se for fechamento total, mostra o consumo total real da mesa.
-            let totalExibir = dados.isParcial ? dados.total : totalConsumo;
-            document.getElementById('cupom-total').innerText = 'R$ ' + totalExibir.toFixed(2);
+            // Mostramos o Total de Consumo e o Saldo se houver
+            let htmlTotal = `<p style="font-size: 0.9rem;">TOTAL CONTA: <b>R$ ${totalConsumo.toFixed(2)}</b></p>`;
+
+            if (dados.isParcial || dados.isAbatimento) {
+                htmlTotal += `<p style="font-size: 0.9rem;">PAGO AGORA: <b>R$ ${dados.total.toFixed(2)}</b></p>`;
+                let saldoPos = totalConsumo - totalPagoAnterior - (dados.isAbatimento ? dados.total : 0);
+                if (saldoPos > 0) {
+                    htmlTotal += `<p style="font-size: 0.9rem; color: #666;">SALDO RESTANTE: R$ ${saldoPos.toFixed(2)}</p>`;
+                }
+            } else {
+                // Fechamento total
+                htmlTotal += `<p style="font-size: 1.1rem;"><b>TOTAL PAGO: R$ ${totalConsumo.toFixed(2)}</b></p>`;
+            }
+
+            document.getElementById('cupom-total').innerHTML = htmlTotal;
             document.getElementById('cupom-forma').innerText = (pagamentosAnteriores.length > 0 && !dados.isParcial) ? "Misto / Final: " + dados.forma : dados.forma;
 
             userConfirm("Venda Concluída", "Deseja imprimir o cupom agora?", () => window.print());

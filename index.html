@@ -1166,7 +1166,7 @@
                 let t = 0;
                 let produtos = itens.filter(i => {
                     let cat = (i.category || i.categoria || '').toUpperCase();
-                    return cat !== 'PAGAMENTO' && cat !== 'VENDA' && i.codigo !== 'PAG_AVULSO';
+                    return cat !== 'PAGAMENTO' && i.codigo !== 'PAG_AVULSO';
                 });
                 let pagamentos = itens.filter(i => {
                     let cat = (i.category || i.categoria || '').toUpperCase();
