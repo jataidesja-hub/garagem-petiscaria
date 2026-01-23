@@ -342,6 +342,7 @@ function finalizarVenda(dados) {
       // Adicionar item negativo na comanda para reduzir saldo pendente
       shItens.appendRow([idStr, 'PAGAMENTO', 'Pagamento Parcial: ' + dados.forma, 1, -dados.total, -dados.total, 0, 'Autogerado', 'PAGAMENTO', 'CONCLUIDO', new Date()]);
     } else {
+      dados.itens.forEach(it => {
         // Registrar item no histórico de vendas (caixa)
         // Se for um registro de PAGAMENTO anterior, NÃO registramos novamente no caixa
         // pois ele já foi registrado como 'ABATIMENTO' no momento em que ocorreu.
@@ -355,6 +356,7 @@ function finalizarVenda(dados) {
              removerParcialItem(idStr, it.codigo, it.qtd);
           }
         }
+      });
       
       // Limpar os registros de PAGAMENTO da comanda após o fechamento TOTAL
       if (dados.tipo === "COMANDA") {
