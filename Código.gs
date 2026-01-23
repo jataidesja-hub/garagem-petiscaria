@@ -247,12 +247,16 @@ function buscarItensComanda(idComanda) {
         let cod = String(r[3]);
         let tipo = String(r[1]);
         let cat = (cod === 'PAG_AVULSO' || tipo === 'ABATIMENTO') ? 'PAGAMENTO' : 'Venda';
+        let val = Number(r[7]);
+        // Se for um pagamento (entrada no caixa), no contexto da comanda ele é um ABATIMENTO (negativo)
+        if (cat === 'PAGAMENTO') val = -Math.abs(val);
+        
         return {
           codigo: cod, 
           nome: String(r[4]), 
           qtd: Number(r[5]), 
           preco: Number(r[6]), 
-          total: Number(r[7]), 
+          total: val, 
           categoria: cat
         };
       });
@@ -344,17 +348,14 @@ function finalizarVenda(dados) {
     } else {
       dados.itens.forEach(it => {
         // Registrar item no histórico de vendas (caixa)
-        // Se for um registro de PAGAMENTO anterior, NÃO registramos novamente no caixa
-        // pois ele já foi registrado como 'ABATIMENTO' no momento em que ocorreu.
-        if ((it.categoria || '').toUpperCase() !== 'PAGAMENTO') {
-          shVend.appendRow([new Date(), dados.tipo, idStr, it.codigo, it.nome, it.qtd, it.preco, it.total, 0, it.total, dados.forma, it.pagoItem || it.total, 0]);
-          
-          if (dados.tipo === "VENDA_DIRETA") processarBaixaUnica(String(it.codigo), Number(it.qtd));
-          
-          // Se for comanda, remover os produtos reais da lista de itens em aberto
-          if (dados.tipo === "COMANDA") {
-             removerParcialItem(idStr, it.codigo, it.qtd);
-          }
+        // Isso garante que o Total do Caixa (Soma de ABA_VENDAS) bata com o dinheiro real recebido hoje.
+        shVend.appendRow([new Date(), dados.tipo, idStr, it.codigo, it.nome, it.qtd, it.preco, it.total, 0, it.total, dados.forma, it.pagoItem || it.total, 0]);
+        
+        if (dados.tipo === "VENDA_DIRETA") processarBaixaUnica(String(it.codigo), Number(it.qtd));
+        
+        // Se for comanda, remover os produtos reais da lista de itens em aberto
+        if (dados.tipo === "COMANDA" && (it.categoria || '').toUpperCase() !== 'PAGAMENTO') {
+           removerParcialItem(idStr, it.codigo, it.qtd);
         }
       });
       

@@ -1165,14 +1165,14 @@
             google.script.run.withSuccessHandler(itens => {
                 let t = 0;
                 let produtos = itens.filter(i => {
-                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
-                    return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO';
+                    return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO' && i.total > 0;
                 });
                 let pagamentos = itens.filter(i => {
-                    let cat = (i.category || i.categoria || '').toUpperCase();
+                    let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
-                    return cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO';
+                    return (cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO') && i.total != 0;
                 });
 
                 let html = produtos.map(i => {
@@ -1182,10 +1182,15 @@
 
                 if (pagamentos.length > 0) {
                     html += `<tr><td colspan="3" style="padding-top:10px; border-bottom:1px solid #000; font-weight:bold; font-size:10px;">PAGAMENTOS REALIZADOS:</td></tr>`;
+                    let pgsVistos = new Set();
                     pagamentos.forEach(p => {
                         let v = Math.abs(p.total);
-                        t += p.total;
-                        html += `<tr style="color:#28a745"><td>${p.nome}</td><td></td><td align="right">R$ -${v.toFixed(2)}</td></tr>`;
+                        let chave = p.nome + "_" + v.toFixed(2);
+                        if (!pgsVistos.has(chave)) {
+                            t += p.total;
+                            html += `<tr style="color:#28a745"><td>${p.nome}</td><td></td><td align="right">R$ -${v.toFixed(2)}</td></tr>`;
+                            pgsVistos.add(chave);
+                        }
                     });
                 }
 

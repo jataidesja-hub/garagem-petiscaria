@@ -1385,32 +1385,41 @@
             document.getElementById('cupom-mesa').innerText = mesa;
             document.getElementById('cupom-data-hora').innerText = new Date().toLocaleString('pt-BR', { timeZone: 'America/Bahia' });
 
-            // Garantir filtragem estrita no cupom
+            // 1. Filtrar Produtos (Somente positivos e não relacionados a pagamento)
             let produtos = dados.itens.filter(i => {
                 let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                 let nome = (i.nome || '').toUpperCase();
-                return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO';
+                return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO' && i.total > 0;
             });
+
+            // 2. Filtrar Pagamentos Realizados (Pegar apenas os registros originais positivos)
             let pagamentosAnteriores = dados.itens.filter(i => {
                 let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                 let nome = (i.nome || '').toUpperCase();
-                return cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO';
+                // Pegamos apenas os registros positivos de pagamento para evitar duplicidade com os de ajuste
+                return (cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO') && i.total != 0;
             });
 
             let totalConsumo = 0;
             let htmlItens = produtos.map(i => {
-                let sub = i.preco * i.qtd;
+                let sub = Math.abs(i.total);
                 totalConsumo += sub;
                 return `<tr><td>${i.nome} (${i.qtd}x)</td><td align="right">R$ ${sub.toFixed(2)}</td></tr>`;
             }).join('');
 
             let totalPagoAnterior = 0;
+            let pgsVistos = new Set();
             if (pagamentosAnteriores.length > 0) {
                 htmlItens += `<tr><td colspan="2" style="border-top:1px dashed #000; font-weight:bold; font-size:10px; padding-top:5px;">PAGAMENTOS REALIZADOS:</td></tr>`;
                 pagamentosAnteriores.forEach(p => {
                     let v = Math.abs(p.total);
-                    totalPagoAnterior += v;
-                    htmlItens += `<tr><td>${p.nome}</td><td align="right">R$ -${v.toFixed(2)}</td></tr>`;
+                    // Evitar duplicar o mesmo valor de pagamento no visor do cupom
+                    let chave = p.nome + "_" + v.toFixed(2);
+                    if (!pgsVistos.has(chave)) {
+                        totalPagoAnterior += v;
+                        htmlItens += `<tr><td>${p.nome}</td><td align="right">R$ -${v.toFixed(2)}</td></tr>`;
+                        pgsVistos.add(chave);
+                    }
                 });
             }
 
@@ -1420,16 +1429,15 @@
 
             document.getElementById('cupom-itens').innerHTML = htmlItens;
 
-            // Rodapé reformulado: Total Conta - Pagamentos = Saldo
+            // Rodapé: Total Conta - Pagamentos = Saldo
             let totalPagoGeral = totalPagoAnterior + (dados.isAbatimento ? dados.total : (dados.isParcial ? dados.total : 0));
-            // Se for fechamento total sem ser abatimento/parcial, o total pago deve ser o consumo
             if (!dados.isParcial && !dados.isAbatimento) totalPagoGeral = totalConsumo;
 
             let htmlTotal = `
               <div style="border-top:2px solid #000; padding-top:5px; margin-top:10px;">
                 <p style="font-size: 0.85rem; display:flex; justify-content:space-between;"><span>TOTAL DA CONTA:</span> <b>R$ ${totalConsumo.toFixed(2)}</b></p>
                 <p style="font-size: 0.85rem; display:flex; justify-content:space-between;"><span>TOTAL PAGO:</span> <b>R$ -${totalPagoGeral.toFixed(2)}</b></p>
-                <p style="font-size: 1.1rem; display:flex; justify-content:space-between; margin-top:5px; border-top:1px solid #000; padding-top:5px;"><span>A PAGAR:</span> <b>R$ ${(totalConsumo - totalPagoGeral).toFixed(2)}</b></p>
+                <p style="font-size: 1.1rem; display:flex; justify-content:space-between; margin-top:5px; border-top:1px solid #000; padding-top:5px;"><span>A PAGAR:</span> <b>R$ ${Math.max(0, totalConsumo - totalPagoGeral).toFixed(2)}</b></p>
               </div>`;
 
             document.getElementById('cupom-total').innerHTML = htmlTotal;
