@@ -804,7 +804,8 @@
                 </div>
             </div>
 
-            <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="finalizarFinal()">FINALIZAR</button>
+            <button id="btn-finalizar-modal" class="btn btn-primary" style="margin-top: 1.5rem;"
+                onclick="finalizarFinal()">FINALIZAR</button>
             <button class="btn btn-outline" style="margin-top: 8px; border:none;"
                 onclick="document.getElementById('modalPagamento').style.display='none'">VOLTAR</button>
         </div>
@@ -1355,6 +1356,21 @@
             let t = parseFloat(document.getElementById('pag-total-l').innerText.replace('R$ ', ''));
             let pago = parseFloat(document.getElementById('pag-valor').value) || 0;
             document.getElementById('pag-troco').innerText = 'R$ ' + (pago > t ? (pago - t).toFixed(2) : '0.00');
+
+            // Dinamizar texto do botão
+            const btn = document.getElementById('btn-finalizar-modal');
+            if (modoPagamento === 'ABATIMENTO') {
+                if (t >= totalAtual && totalAtual > 0) {
+                    btn.innerText = 'FECHAR CONTA';
+                    btn.className = 'btn btn-primary';
+                } else {
+                    btn.innerText = 'ABATER';
+                    btn.className = 'btn btn-primary';
+                }
+            } else {
+                btn.innerText = 'FECHAR CONTA';
+                btn.className = 'btn btn-primary';
+            }
         }
 
         function abrirPagamento() {
@@ -1374,14 +1390,16 @@
             let m = document.getElementById('pag-metodo').value;
             let clie = document.getElementById('pag-cliente').value;
             if (m === 'Fiado' && !clie) { showToast("Informe o nome do cliente para Fiado!", "error"); return; }
+            let isFullPayment = (modoPagamento === 'ABATIMENTO' && valPagar >= totalAtual) || modoPagamento === 'TOTAL';
+
             let dados = {
                 id: idAtivo, tipo: 'COMANDA', total: valPagar, forma: m,
                 cliente: clie,
                 pago: parseFloat(document.getElementById('pag-valor').value) || 0,
                 troco: parseFloat(document.getElementById('pag-troco').innerText.replace('R$ ', '')),
-                itens: itensPagar,
-                isParcial: (modoPagamento === 'ABATIMENTO'),
-                isAbatimento: (modoPagamento === 'ABATIMENTO')
+                itens: isFullPayment ? itensSessao : [],
+                isParcial: !isFullPayment,
+                isAbatimento: !isFullPayment
             };
 
             mostrarCarregando("Finalizando...");
