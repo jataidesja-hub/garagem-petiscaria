@@ -277,77 +277,47 @@
         }
 
         /* --- PWA INSTALL PROMPT --- */
-        #pwa-install-banner {
-            position: fixed;
-            bottom: 2rem;
-            left: 5%;
-            right: 5%;
-            background: linear-gradient(135deg, #1a1a24, #111);
-            border: 1px solid var(--primary);
-            border-radius: 20px;
-            padding: 1.5rem;
+        /* Botão de Instalação PWA */
+        #install-button {
             display: none;
-            align-items: center;
-            gap: 1.5rem;
-            z-index: 9999;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(100px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .pwa-icon {
-            font-size: 2.5rem;
-            color: var(--primary);
-            background: rgba(33, 150, 243, 0.1);
-            padding: 15px;
-            border-radius: 15px;
-        }
-
-        .pwa-text {
-            flex: 1;
-        }
-
-        .pwa-text h4 {
-            margin: 0;
-            font-size: 1rem;
-            color: var(--text);
-        }
-
-        .pwa-text p {
-            margin: 5px 0 0;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .btn-install {
-            background: var(--primary);
-            color: #fff;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary), #b8860b);
+            color: #000;
             border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 15px 25px;
+            border-radius: 50px;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             cursor: pointer;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            z-index: 9999;
+            transition: all 0.3s ease;
+            animation: pulse-install 2s infinite;
         }
 
-        .btn-close-pwa {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 5px;
+        #install-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.6);
+        }
+
+        #install-button i {
+            margin-right: 8px;
+        }
+
+        @keyframes pulse-install {
+            0% {
+                box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 5px 30px rgba(212, 175, 55, 0.7);
+            }
+
+            100% {
+                box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            }
         }
     </style>
 </head>
@@ -358,18 +328,8 @@
         <span><i class="fab fa-whatsapp"></i> (87) 9 8143-6052</span>
     </div>
 
-    <div id="pwa-install-banner">
-        <div class="pwa-icon"><i class="fas fa-rocket"></i></div>
-        <div class="pwa-text">
-            <h4>Instalar Sistema</h4>
-            <p id="pwa-desc">Acesse o Portal de Demonstração direto da tela inicial.</p>
-        </div>
-        <button id="btn-pwa-install" class="btn-install">INSTALAR</button>
-        <button class="btn-close-pwa"
-            onclick="document.getElementById('pwa-install-banner').style.display='none'">✕</button>
-    </div>
-
-
+    <!-- Botão de Instalação PWA -->
+    <button id="install-button"><i class="fas fa-download"></i>Instalar App</button>
 
     <header
         style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background: rgba(13, 13, 18, 0.95); border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100;">
@@ -578,22 +538,39 @@
                 .catch(err => console.log('Erro SW', err));
         }
 
+        // PWA Install Prompt
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('pwa-install-banner').style.display = 'flex';
+            // Mostrar o botão de instalação
+            document.getElementById('install-button').style.display = 'block';
         });
 
-        document.getElementById('btn-pwa-install')?.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    document.getElementById('pwa-install-banner').style.display = 'none';
+        document.getElementById('install-button').addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                // Fallback para iOS
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    alert("No iPhone/iPad:\n1. Toque no ícone de Compartilhar (quadrado com seta)\n2. Role para baixo e selecione 'Adicionar à Tela de Início'");
                 }
-                deferredPrompt = null;
+                return;
             }
+            // Mostrar o prompt de instalação
+            deferredPrompt.prompt();
+            // Aguardar a escolha do usuário
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // Limpar o prompt
+            deferredPrompt = null;
+            // Esconder o botão após a instalação
+            document.getElementById('install-button').style.display = 'none';
+        });
+
+        // Esconder o botão se o app já estiver instalado
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA foi instalado');
+            document.getElementById('install-button').style.display = 'none';
         });
     </script>
 </body>

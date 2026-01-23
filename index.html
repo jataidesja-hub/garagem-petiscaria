@@ -578,6 +578,49 @@
                 box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
             }
         }
+
+        /* Botão de Instalação PWA */
+        #install-button {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary), #b8860b);
+            color: #000;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            z-index: 9999;
+            transition: all 0.3s ease;
+            animation: pulse-install 2s infinite;
+        }
+
+        #install-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.6);
+        }
+
+        #install-button i {
+            margin-right: 8px;
+        }
+
+        @keyframes pulse-install {
+            0% {
+                box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 5px 30px rgba(212, 175, 55, 0.7);
+            }
+
+            100% {
+                box-shadow: 0 5px 20px rgba(212, 175, 55, 0.4);
+            }
+        }
     </style>
 </head>
 
@@ -624,6 +667,9 @@
                 incorreta.</p>
         </div>
     </div>
+
+    <!-- Botão de Instalação PWA -->
+    <button id="install-button"><i class="fas fa-download"></i>Instalar App</button>
 
     <!-- CONTEÚDO PRINCIPAL (ADMIN) -->
     <div id="view-admin" style="display: none;">
@@ -1457,6 +1503,36 @@
                     .then(reg => console.log('SW registrado', reg))
                     .catch(err => console.log('Erro SW', err));
             }
+
+            // PWA Install Prompt
+            let deferredPrompt;
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                // Mostrar o botão de instalação
+                document.getElementById('install-button').style.display = 'block';
+            });
+
+            document.getElementById('install-button').addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    return;
+                }
+                // Mostrar o prompt de instalação
+                deferredPrompt.prompt();
+                // Aguardar a escolha do usuário
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                // Limpar o prompt
+                deferredPrompt = null;
+                // Esconder o botão após a instalação
+                document.getElementById('install-button').style.display = 'none';
+            });
+
+            // Esconder o botão se o app já estiver instalado
+            window.addEventListener('appinstalled', () => {
+                console.log('PWA foi instalado');
+                document.getElementById('install-button').style.display = 'none';
+            });
         };
         function toggleVdCliente() {
             const m = document.getElementById('vd-pagamento').value;
