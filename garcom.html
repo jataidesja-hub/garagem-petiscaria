@@ -1185,7 +1185,7 @@
             atualizarItens(isFechada);
         }
 
-        function atualizarItens(isFechada = false, isBackground = false) {
+        function atualizarItens(isFechada = false, isBackground = false, callback = null) {
             if (!idAtivo) return;
             google.script.run.withSuccessHandler(itens => {
                 if (!Array.isArray(itens)) return;
@@ -1255,6 +1255,8 @@
 
                 document.getElementById('tabela-itens').innerHTML = html || '<tr><td colspan="2" align="center">Vazio</td></tr>';
                 document.getElementById('view-total').innerText = (isFechada ? 'Faturado: R$ ' : 'Saldo Aberto: R$ ') + Math.max(0, totalAtual).toFixed(2);
+
+                if (callback) callback();
             }).buscarItensComanda(idAtivo);
         }
 
@@ -1413,10 +1415,19 @@
                 if (res.sucesso) {
                     mostrarFinalizado("Venda Concluída!", () => {
                         prepararCupom(dados);
-                        fecharModais();
+                        if (isFullPayment) {
+                            fecharModais();
+                        } else {
+                            // Se for abate, manter modal aberto, atualizar dados e campos
+                            carregarComandas(true);
+                            atualizarItens(false, false, () => {
+                                recalcParcial();
+                                document.getElementById('input-valor-avulso').value = '0.00';
+                                document.getElementById('pag-valor').value = '';
+                                document.getElementById('pag-troco').innerText = 'R$ 0.00';
+                            });
+                        }
                         document.getElementById('pag-cliente').value = '';
-                        document.getElementById('pag-total-l').innerText = 'R$ 0.00';
-                        document.getElementById('pag-valor').value = '';
                     });
                 } else { showToast("Erro: " + res.erro, "error"); }
             }).finalizarVenda(dados);
