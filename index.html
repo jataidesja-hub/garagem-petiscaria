@@ -1410,11 +1410,21 @@
 
             google.script.run.withSuccessHandler(itens => {
                 let t = 0;
-                document.getElementById('v-itens').innerHTML = itens.map(i => {
+                // Filtrar itens: pegamos produtos e taxas. 
+                // Se for entrega, vamos ignorar o "Pagamento Final" no visual do cupom para o cliente pagar na porta.
+                let produtosETaxas = itens.filter(i => {
+                    let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
+                    let nomeItem = (i.nome || '').toUpperCase();
+                    // Se for Entrega (tem item TAXA_ENTREGA), filtramos os pagamentos negativos
+                    return cat !== 'PAGAMENTO' && !nomeItem.includes('PAGAMENTO FINAL');
+                });
+
+                document.getElementById('v-itens').innerHTML = produtosETaxas.map(i => {
                     t += i.total;
                     return `<tr><td>${i.nome}</td><td>${i.qtd}x</td><td align="right">R$ ${i.total.toFixed(2)}</td></tr>`;
                 }).join('');
-                document.getElementById('v-total').innerText = 'Total: R$ ' + t.toFixed(2);
+
+                document.getElementById('v-total').innerText = 'Total a Pagar: R$ ' + t.toFixed(2);
                 document.getElementById('modalVisualizar').style.display = 'flex';
             }).buscarItensComanda(id);
         }
