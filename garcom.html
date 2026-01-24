@@ -272,12 +272,36 @@
             color: white;
             font-family: inherit;
             font-size: 1.1rem;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4AF37' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 3rem;
+            cursor: pointer;
         }
 
         select option {
             background: #1a1a2e;
             color: white;
+            padding: 10px;
+            font-size: 1rem;
         }
+
+        /* Fix para iOS/Safari */
+        @supports (-webkit-touch-callout: none) {
+            select {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid var(--primary);
+                font-size: 16px;
+                /* Previne zoom no iOS */
+            }
+        }
+
 
         .search-container {
             position: relative;

@@ -824,6 +824,26 @@
                             <label style="font-size: 0.8rem; color: var(--text-muted);">Nome do Cliente (Fiado)</label>
                             <input type="text" id="vd-cliente" placeholder="Quem está devendo?" style="margin-bottom:0">
                         </div>
+
+                        <!-- Opção de Entrega -->
+                        <div
+                            style="grid-column: 1 / -1; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--glass);">
+                            <label
+                                style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 1rem; color: var(--text); margin-bottom: 0;">
+                                <input type="checkbox" id="vd-entrega" onchange="toggleVdEntrega()"
+                                    style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary);">
+                                <span style="font-weight: 600;">🛵 É para entrega?</span>
+                            </label>
+                            <div id="vd-taxa-entrega-cont" style="display: none; margin-top: 10px;">
+                                <label style="font-size: 0.8rem; color: var(--text-muted);">Valor da Taxa de
+                                    Entrega</label>
+                                <input type="number" id="vd-taxa-entrega" step="0.01" value="0.00"
+                                    placeholder="Ex: 5.00"
+                                    style="margin-bottom: 0; font-size: 1.1rem; text-align: center;"
+                                    oninput="atualizarTotalVD()">
+                            </div>
+                        </div>
+
                         <div>
                             <h2 id="vd-total" style="color: var(--primary); margin-bottom: 0.5rem; text-align: right;">
                                 R$
@@ -836,6 +856,7 @@
             </div>
         </div> <!-- Fim container -->
     </div> <!-- Fim view-admin -->
+
 
     <div id="toast-container" class="toast-container"></div>
 
@@ -1279,6 +1300,13 @@
                     <td align="right">R$ ${(i.preco * i.qtd).toFixed(2)}</td>
                 </tr>`;
             }).join('');
+
+            // Adicionar taxa de entrega se marcado
+            if (document.getElementById('vd-entrega').checked) {
+                let taxaEntrega = parseFloat(document.getElementById('vd-taxa-entrega').value) || 0;
+                t += taxaEntrega;
+            }
+
             document.getElementById('vd-total').innerText = 'R$ ' + t.toFixed(2);
         }
 
@@ -1301,6 +1329,30 @@
 
             mostrarCarregando("Finalizando...");
             let t = parseFloat(document.getElementById('vd-total').innerText.replace('R$ ', ''));
+
+            // Preparar itens do carrinho
+            let itensVenda = carrinhoVD.map(it => ({
+                codigo: it.codigo,
+                nome: it.nome,
+                qtd: it.qtd,
+                preco: it.preco,
+                total: it.preco * it.qtd
+            }));
+
+            // Adicionar taxa de entrega como item se marcado
+            if (document.getElementById('vd-entrega').checked) {
+                let taxaEntrega = parseFloat(document.getElementById('vd-taxa-entrega').value) || 0;
+                if (taxaEntrega > 0) {
+                    itensVenda.push({
+                        codigo: 'TAXA_ENTREGA',
+                        nome: 'Taxa de Entrega',
+                        qtd: 1,
+                        preco: taxaEntrega,
+                        total: taxaEntrega
+                    });
+                }
+            }
+
             let dados = {
                 id: 'VD' + new Date().getTime(),
                 tipo: 'VENDA_DIRETA',
@@ -1309,18 +1361,16 @@
                 cliente: clie,
                 pago: t,
                 troco: 0,
-                itens: carrinhoVD.map(it => ({
-                    codigo: it.codigo,
-                    nome: it.nome,
-                    qtd: it.qtd,
-                    preco: it.preco,
-                    total: it.preco * it.qtd
-                }))
+                itens: itensVenda
             };
+
             google.script.run.withSuccessHandler(() => {
                 esconderCarregando();
                 carrinhoVD = [];
                 document.getElementById('vd-cliente').value = '';
+                document.getElementById('vd-entrega').checked = false;
+                document.getElementById('vd-taxa-entrega').value = '0.00';
+                document.getElementById('vd-taxa-entrega-cont').style.display = 'none';
                 toggleVdCliente();
                 renderVD();
                 carregarDash();
@@ -1537,6 +1587,19 @@
         function toggleVdCliente() {
             const m = document.getElementById('vd-pagamento').value;
             document.getElementById('vd-cliente-cont').style.display = m === 'Fiado' ? 'block' : 'none';
+        }
+
+        function toggleVdEntrega() {
+            const isEntrega = document.getElementById('vd-entrega').checked;
+            document.getElementById('vd-taxa-entrega-cont').style.display = isEntrega ? 'block' : 'none';
+            if (!isEntrega) {
+                document.getElementById('vd-taxa-entrega').value = '0.00';
+            }
+            renderVD();
+        }
+
+        function atualizarTotalVD() {
+            renderVD();
         }
     </script>
 </body>

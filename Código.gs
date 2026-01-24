@@ -325,6 +325,36 @@ function adicionarItemComanda(idComanda, cod, obs, garcom) {
   processarBaixaUnica(cod, 1);
   return {sucesso: true};
 }
+
+/**
+ * Adicionar Taxa de Entrega como item especial na comanda
+ */
+function adicionarTaxaEntrega(idComanda, valorTaxa) {
+  if (!idComanda || !valorTaxa || valorTaxa <= 0) {
+    return {sucesso: false, erro: "Dados incompletos ou taxa inválida"};
+  }
+  
+  const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
+  
+  // Adicionar taxa de entrega como um item especial
+  shItens.appendRow([
+    idComanda, 
+    'TAXA_ENTREGA', 
+    'Taxa de Entrega', 
+    1, 
+    valorTaxa, 
+    valorTaxa, 
+    0, 
+    'Entrega', 
+    'Serviços', 
+    'PRONTO', 
+    new Date(),
+    ''
+  ]);
+
+  return {sucesso: true};
+}
+
 function removerItemComanda(idComanda, cod) {
   if (!idComanda || !cod) return {sucesso: false, erro: "ID ou Código faltando"};
   const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
