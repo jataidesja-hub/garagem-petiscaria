@@ -1156,6 +1156,19 @@
         function carregarEstoque() {
             google.script.run.withSuccessHandler(data => {
                 estoqueCache = data;
+                let html = `<table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Produto</th>
+                            <th>Categoria</th>
+                            <th>Preço</th>
+                            <th>Estoque</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
                 if (Array.isArray(data)) {
                     data.forEach(p => {
                         html += `
