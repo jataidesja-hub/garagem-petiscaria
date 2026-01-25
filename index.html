@@ -694,10 +694,18 @@
             <div id="tab-dash" class="tab-content">
                 <div class="card" style="padding: 1rem 2rem; margin-bottom: 2rem;">
                     <div style="display:flex; gap:15px; align-items:center; flex-wrap: wrap;">
-                        <b>Início:</b>
-                        <input type="date" id="dash-inicio" style="width:auto; margin:0" onchange="carregarDash()">
-                        <b>Fim:</b>
-                        <input type="date" id="dash-fim" style="width:auto; margin:0" onchange="carregarDash()">
+                        <div style="display:flex; align-items:center; gap:5px">
+                            <b>Início:</b>
+                            <input type="date" id="dash-inicio" style="width:auto; margin:0" onchange="carregarDash()">
+                            <input type="time" id="dash-h-inicio" style="width:auto; margin:0" value="00:00"
+                                onchange="carregarDash()">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:5px">
+                            <b>Fim:</b>
+                            <input type="date" id="dash-fim" style="width:auto; margin:0" onchange="carregarDash()">
+                            <input type="time" id="dash-h-fim" style="width:auto; margin:0" value="23:59"
+                                onchange="carregarDash()">
+                        </div>
                         <button class="btn btn-outline" onclick="setFiltroHoje()">Hoje</button>
                         <button class="btn btn-outline" onclick="setFiltroMes()">Mês Atual</button>
                         <button class="btn btn-outline" onclick="limparFiltro()">Limpar</button>
@@ -1025,32 +1033,30 @@
         function carregarDash() {
             const inicio = document.getElementById('dash-inicio').value;
             const fim = document.getElementById('dash-fim').value;
+            const hInicio = document.getElementById('dash-h-inicio').value || '00:00';
+            const hFim = document.getElementById('dash-h-fim').value || '23:59';
 
             google.script.run.withSuccessHandler(lista => {
                 let html = "";
                 if (Array.isArray(lista)) {
                     lista.forEach(c => {
-                        let match = true;
-                        if (inicio && c.data < inicio) match = false;
-                        if (fim && c.data > fim) match = false;
+                        // O servidor já filtra por data e hora em listarTodasComandas, 
+                        // mas mantemos uma validação extra se necessário ou apenas renderizamos.
+                        const borderStyle = c.isAntiga && c.status === 'ABERTA' ? 'border: 2px solid #ff9800; animation: pulse-warn 2s infinite;' : '';
+                        const alertIcon = c.isAntiga && c.status === 'ABERTA' ? '<i class="fas fa-clock" style="color:#ff9800; margin-right:5px;"></i>' : '';
 
-                        if (match) {
-                            const borderStyle = c.isAntiga && c.status === 'ABERTA' ? 'border: 2px solid #ff9800; animation: pulse-warn 2s infinite;' : '';
-                            const alertIcon = c.isAntiga && c.status === 'ABERTA' ? '<i class="fas fa-clock" style="color:#ff9800; margin-right:5px;"></i>' : '';
-
-                            html += `
-                                <div class="comanda-item" style="${borderStyle}" onclick="visualizar('${c.id}', '${c.nome}')">
-                                    <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
-                                    <b>${alertIcon}${c.nome}</b>
-                                    ${c.cliente && c.cliente !== 'Balcão' ? `<br><small style="color:var(--primary); font-size:0.7rem">👤 ${c.cliente}</small>` : ''}<br>
-                                    <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${(c.total || 0).toFixed(2)}</span>
-                                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${c.dataExibicao}</div>
-                                </div>`;
-                        }
+                        html += `
+                            <div class="comanda-item" style="${borderStyle}" onclick="visualizar('${c.id}', '${c.nome}')">
+                                <span class="status-badge" style="background:${c.status === 'ABERTA' ? 'rgba(0,230,118,0.2)' : 'rgba(255,255,255,0.1)'}; color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text-muted)'}">${c.status}</span>
+                                <b>${alertIcon}${c.nome}</b>
+                                ${c.cliente && c.cliente !== 'Balcão' ? `<br><small style="color:var(--primary); font-size:0.7rem">👤 ${c.cliente}</small>` : ''}<br>
+                                <span style="color:${c.status === 'ABERTA' ? 'var(--success)' : 'var(--text)'}; font-weight:700">R$ ${(c.total || 0).toFixed(2)}</span>
+                                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">${c.dataExibicao}</div>
+                            </div>`;
                     });
                 }
                 document.getElementById('lista-comandas-hist').innerHTML = (Array.isArray(lista) ? html : '') || 'Sem dados.';
-            }).listarTodasComandas(inicio, fim);
+            }).listarTodasComandas(inicio, fim, hInicio, hFim);
 
             google.script.run.withSuccessHandler(d => {
                 if (!d) return;
@@ -1144,7 +1150,7 @@
                 } else {
                     document.getElementById('card-fiados').style.display = 'none';
                 }
-            }).getDashboardData(inicio, fim);
+            }).getDashboardData(inicio, fim, hInicio, hFim);
         }
 
         function abrirPagamentoFiado(id, cliente, total) {
@@ -1446,6 +1452,8 @@
         function limparFiltro() {
             document.getElementById('dash-inicio').value = '';
             document.getElementById('dash-fim').value = '';
+            document.getElementById('dash-h-inicio').value = '00:00';
+            document.getElementById('dash-h-fim').value = '23:59';
             carregarDash();
         }
 
@@ -1453,6 +1461,8 @@
             const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
             document.getElementById('dash-inicio').value = hoje;
             document.getElementById('dash-fim').value = hoje;
+            document.getElementById('dash-h-inicio').value = '00:00';
+            document.getElementById('dash-h-fim').value = '23:59';
             carregarDash();
         }
 
@@ -1462,6 +1472,8 @@
             const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
             document.getElementById('dash-inicio').value = inicio;
             document.getElementById('dash-fim').value = hoje;
+            document.getElementById('dash-h-inicio').value = '00:00';
+            document.getElementById('dash-h-fim').value = '23:59';
             carregarDash();
         }
 
@@ -1486,6 +1498,8 @@
             const hoje = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Bahia' });
             document.getElementById('dash-inicio').value = hoje;
             document.getElementById('dash-fim').value = hoje;
+            document.getElementById('dash-h-inicio').value = '00:00';
+            document.getElementById('dash-h-fim').value = '23:59';
 
             carregarDash();
             carregarEstoque();

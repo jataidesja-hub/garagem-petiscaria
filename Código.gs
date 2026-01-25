@@ -495,7 +495,7 @@ function processarEstorno(cod, qtd) {
   }
 }
 
-function getDashboardData(inicio, fim) {
+function getDashboardData(inicio, fim, hInicio, hFim) {
   const shVend = getOrCreateSheet(ABA_VENDAS);
   const shEst = getOrCreateSheet(ABA_ESTOQUE);
   
@@ -509,8 +509,10 @@ function getDashboardData(inicio, fim) {
   let diasUnicos = new Set();
   let seriesHoras = {}; // Para o gráfico por hora
 
-  const startTime = inicio ? new Date(inicio + "T00:00:00-03:00").getTime() : 0;
-  const endTime = fim ? new Date(fim + "T23:59:59-03:00").getTime() : 4102444800000;
+  const hIni = hInicio || "00:00";
+  const hF = hFim || "23:59";
+  const startTime = inicio ? new Date(inicio + "T" + hIni + ":00-03:00").getTime() : 0;
+  const endTime = fim ? new Date(fim + "T" + hF + ":59-03:00").getTime() : 4102444800000;
 
   if (data.length > 1) {
     data.slice(1).forEach((r) => {
