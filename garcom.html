@@ -1114,8 +1114,8 @@
             if (!p) return;
 
             let nomeProd = p.nome;
-            let cat = (p.categoria || "").toLowerCase();
-            let isCozinha = cat.includes('refeição') || cat.includes('refeicao') || cat.includes('petisco') || cat.includes('cozinha');
+            const normCat = (p.categoria || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const isCozinha = normCat.includes('refeicao') || normCat.includes('petisco') || normCat.includes('cozinha');
 
             if (isCozinha) {
                 let obs = prompt(`Observação para ${nomeProd} (Ex: Sem cebola):`, "");
@@ -1123,24 +1123,46 @@
 
                 const garcomAtivo = document.getElementById('select-garcom').value;
                 mostrarCarregando("Adicionando...");
-                google.script.run.withSuccessHandler(() => {
-                    mostrarFinalizado("Adicionado!", () => {
-                        atualizarItens();
-                        toggleDropdown(false);
-                        document.getElementById('search-prod').value = '';
-                    });
-                }).adicionarItemComanda(idAtivo, String(cod), obs, garcomAtivo);
+                google.script.run
+                    .withSuccessHandler(res => {
+                        if (res && res.sucesso) {
+                            mostrarFinalizado("Adicionado!", () => {
+                                atualizarItens();
+                                toggleDropdown(false);
+                                document.getElementById('search-prod').value = '';
+                            });
+                        } else {
+                            document.getElementById('loader').style.display = 'none';
+                            showToast(res ? res.erro : "Erro ao adicionar", "error");
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        document.getElementById('loader').style.display = 'none';
+                        showToast("Erro de conexão", "error");
+                    })
+                    .adicionarItemComanda(idAtivo, String(cod), obs, garcomAtivo);
             } else {
                 userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} à mesa?`, () => {
                     const garcomAtivo = document.getElementById('select-garcom').value;
                     document.getElementById('search-prod').value = '';
                     mostrarCarregando("Adicionando...");
-                    google.script.run.withSuccessHandler(() => {
-                        mostrarFinalizado("Adicionado!", () => {
-                            atualizarItens();
-                            toggleDropdown(false);
-                        });
-                    }).adicionarItemComanda(idAtivo, String(cod), "", garcomAtivo);
+                    google.script.run
+                        .withSuccessHandler(res => {
+                            if (res && res.sucesso) {
+                                mostrarFinalizado("Adicionado!", () => {
+                                    atualizarItens();
+                                    toggleDropdown(false);
+                                });
+                            } else {
+                                document.getElementById('loader').style.display = 'none';
+                                showToast(res ? res.erro : "Erro ao adicionar", "error");
+                            }
+                        })
+                        .withFailureHandler(err => {
+                            document.getElementById('loader').style.display = 'none';
+                            showToast("Erro de conexão", "error");
+                        })
+                        .adicionarItemComanda(idAtivo, String(cod), "", garcomAtivo);
                 });
             }
         }
@@ -1174,12 +1196,13 @@
                 let produtos = itens.filter(i => {
                     let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
-                    return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO' && i.total > 0;
+                    // Relaxar filtro: permite i.total === 0 se Qtd > 0 (ex: cortesia)
+                    return cat !== 'PAGAMENTO' && !nome.includes('PAGAMENTO PARCIAL') && i.codigo !== 'PAG_AVULSO' && (Math.abs(i.total) >= 0 && i.qtd > 0);
                 });
                 let pagamentos = itens.filter(i => {
                     let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                     let nome = (i.nome || '').toUpperCase();
-                    return (cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO' || i.codigo === 'PAG_FINAL') && i.total != 0;
+                    return (cat === 'PAGAMENTO' || nome.includes('PAGAMENTO PARCIAL') || i.codigo === 'PAG_AVULSO' || i.codigo === 'PAG_FINAL') && (i.total != 0 || i.codigo === 'PAG_FINAL');
                 });
 
                 let html = produtos.map(i => {
