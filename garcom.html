@@ -828,6 +828,21 @@
         </div>
     </div>
 
+    <!-- Modal Observação Customizada -->
+    <div id="modalObs" class="overlay" style="z-index: 3100;">
+        <div class="modal-sheet" style="text-align: center; border: 1px solid var(--primary);">
+            <h3 id="obs-title">📝 Observação</h3>
+            <p id="obs-prod-nome" style="margin-bottom: 1rem; color: var(--primary); font-weight: 700;"></p>
+            <textarea id="obs-input" placeholder="Ex: Sem cebola, gelo e limão..."
+                style="width: 100%; height: 80px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--glass); border-radius: 12px; padding: 10px; margin-bottom: 1.5rem;"></textarea>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn btn-primary" id="obs-save">CONFIRMAR</button>
+                <button class="btn btn-outline" style="border:none"
+                    onclick="document.getElementById('modalObs').style.display='none'">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ESTRUTURA PARA IMPRESSÃO -->
     <div id="cupom-print" style="display:none; font-family: 'Courier New', Courier, monospace; line-height: 1.0;">
         <div style="text-align:center; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 5px;">
@@ -1118,29 +1133,36 @@
             const isCozinha = normCat.includes('refeicao') || normCat.includes('petisco') || normCat.includes('cozinha');
 
             if (isCozinha) {
-                let obs = prompt(`Observação para ${nomeProd} (Ex: Sem cebola):`, "");
-                if (obs === null) return; // Cancelado
+                document.getElementById('obs-prod-nome').innerText = nomeProd;
+                document.getElementById('obs-input').value = '';
+                document.getElementById('modalObs').style.display = 'flex';
+                document.getElementById('obs-input').focus();
 
-                const garcomAtivo = document.getElementById('select-garcom').value;
-                mostrarCarregando("Adicionando...");
-                google.script.run
-                    .withSuccessHandler(res => {
-                        if (res && res.sucesso) {
-                            mostrarFinalizado("Adicionado!", () => {
-                                atualizarItens();
-                                toggleDropdown(false);
-                                document.getElementById('search-prod').value = '';
-                            });
-                        } else {
+                document.getElementById('obs-save').onclick = () => {
+                    let obs = document.getElementById('obs-input').value.trim();
+                    document.getElementById('modalObs').style.display = 'none';
+
+                    const garcomAtivo = document.getElementById('select-garcom').value;
+                    mostrarCarregando("Adicionando...");
+                    google.script.run
+                        .withSuccessHandler(res => {
+                            if (res && res.sucesso) {
+                                mostrarFinalizado("Adicionado!", () => {
+                                    atualizarItens();
+                                    toggleDropdown(false);
+                                    document.getElementById('search-prod').value = '';
+                                });
+                            } else {
+                                document.getElementById('loader').style.display = 'none';
+                                showToast(res ? res.erro : "Erro ao adicionar", "error");
+                            }
+                        })
+                        .withFailureHandler(err => {
                             document.getElementById('loader').style.display = 'none';
-                            showToast(res ? res.erro : "Erro ao adicionar", "error");
-                        }
-                    })
-                    .withFailureHandler(err => {
-                        document.getElementById('loader').style.display = 'none';
-                        showToast("Erro de conexão", "error");
-                    })
-                    .adicionarItemComanda(idAtivo, String(cod), obs, garcomAtivo);
+                            showToast("Erro de conexão", "error");
+                        })
+                        .adicionarItemComanda(idAtivo, String(cod), obs, garcomAtivo);
+                };
             } else {
                 userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} à mesa?`, () => {
                     const garcomAtivo = document.getElementById('select-garcom').value;
@@ -1291,12 +1313,12 @@
                     } else {
                         document.getElementById('loader').style.display = 'none';
                         const erroMsg = res ? res.erro : "Resposta vazia do servidor";
-                        alert("Servidor diz: " + erroMsg);
+                        showToast(erroMsg, "error");
                     }
                 })
                 .withFailureHandler(err => {
                     document.getElementById('loader').style.display = 'none';
-                    alert("Falha Crítica de Conexão: " + JSON.stringify(err));
+                    showToast("Falha Crítica de Conexão", "error");
                     console.error(err);
                 })
                 .alterarNomeMesa(idAtivo, novoNome);
