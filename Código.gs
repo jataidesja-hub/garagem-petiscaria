@@ -1,5 +1,5 @@
 /****************************************************
- * SISTEMA A GARAGEM PETISCARIA - V1.0
+ * SISTEMA DEMONSTRATIVO - V1.0
  ****************************************************/
 
 const ABA_ESTOQUE       = 'Estoque';

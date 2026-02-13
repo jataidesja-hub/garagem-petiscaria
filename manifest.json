@@ -1,7 +1,7 @@
 {
-  "name": "A GARAGEM",
-  "short_name": "A GARAGEM",
-  "description": "Sistema A GARAGEM - Bar e Restaurante",
+  "name": "SISTEMA DEMONSTRATIVO",
+  "short_name": "SISTEMA DEMONSTRATIVO",
+  "description": "Sistema Demonstrativo",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#050508",
