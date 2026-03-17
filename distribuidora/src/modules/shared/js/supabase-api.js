@@ -153,7 +153,7 @@ const SupabaseAPI = {
     },
 
     async listarTodasComandas(dataInicio, dataFim, horaInicio, horaFim) {
-        let path = 'comandas?select=*';
+        let path = 'comandos?select=*';
         if (dataInicio && dataFim) {
             const start = `${dataInicio}T${horaInicio || '00:00'}:00Z`;
             const end = `${dataFim}T${horaFim || '23:59'}:59Z`;
@@ -187,7 +187,7 @@ const SupabaseAPI = {
 
     async abrirNovaComanda(nome) {
         const id = 'CM' + new Date().getTime();
-        await SupabaseClient.insert('comandas', { id, mesa_nome: nome, status: 'ABERTA' });
+        await SupabaseClient.insert('comandos', { id, mesa_nome: nome, status: 'ABERTA' });
         return { sucesso: true, id };
     },
 
@@ -223,7 +223,7 @@ const SupabaseAPI = {
         };
         await SupabaseClient.insert('vendas', venda);
         if (dados.tipo === 'COMANDA') {
-            await SupabaseClient.update('comandas', {
+            await SupabaseClient.update('comandos', {
                 status: 'FECHADA',
                 total_liquido: dados.total,
                 forma_pagamento: dados.forma,
@@ -261,19 +261,19 @@ const SupabaseAPI = {
     },
 
     async getNotificacoesCozinha() {
-        const res = await SupabaseClient.fetch('comanda_itens?status_item=eq.PRONTO&order=timestamp.desc&limit=5&select=*,comandas(mesa_nome)');
+        const res = await SupabaseClient.fetch('comanda_itens?status_item=eq.PRONTO&order=timestamp.desc&limit=5&select=*,comandos(mesa_nome)');
         return res.data.map(r => ({
             rowIndex: r.id,
             idComanda: r.id_comanda,
             nome: r.nome_produto,
             qtd: r.qtd,
-            mesa: r.comandas ? r.comandas.mesa_nome : 'Desconhecida',
+            mesa: r.comandos ? r.comandos.mesa_nome : 'Desconhecida',
             timestamp: new Date(r.timestamp).getTime()
         }));
     },
 
     async alterarNomeMesa(id, novoNome) {
-        const res = await SupabaseClient.update('comandas', { mesa_nome: novoNome }, `id=eq.${id}`);
+        const res = await SupabaseClient.update('comandos', { mesa_nome: novoNome }, `id=eq.${id}`);
         return { sucesso: res.sucesso };
     }
 };
