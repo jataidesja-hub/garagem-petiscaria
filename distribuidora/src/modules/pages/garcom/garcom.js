@@ -1,4 +1,4 @@
-﻿// CONFIGURAÃ‡ÃƒO VERCEL -> GOOGLE
+// CONFIGURAÃ‡ÃƒO VERCEL -> GOOGLE
         const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
 
         // POLYFILL GOOGLE SCRIPT RUN
@@ -155,8 +155,9 @@
 
             if (syncIcon) syncIcon.classList.add('fa-spin');
 
-            // Mostrar skeleton apenas em trocas manuais de aba (nÃ£o em background sync)
-            if (!isBackground) {
+            // SÓ mostra skeleton se a grade estiver vazia E não for background sync
+            // Isso evita que as mesas sumam enquanto carrega a atualização
+            if (!isBackground && grid.innerHTML.trim() === "") {
                 grid.innerHTML = `
                     <div class="skeleton-card skeleton"></div>
                     <div class="skeleton-card skeleton"></div>
