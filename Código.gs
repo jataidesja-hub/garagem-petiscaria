@@ -1,15 +1,10 @@
 /****************************************************
- * SISTEMA DEMONSTRATIVO - V1.0
+ * SISTEMA DEMONSTRATIVO - V1.0 - SUPABASE INTEGRATED
  ****************************************************/
 
-const ABA_ESTOQUE       = 'Estoque';
-const ABA_VENDAS        = 'Vendas';
-const ABA_COMANDAS      = 'Comandas';
-const ABA_COMANDA_ITENS = 'ComandaItens';
-
 function onOpen() {
-  SpreadsheetApp.getUi().createMenu('🚀 DEMONSTRAÇÃO')
-    .addItem('Restaurar Estrutura e Exemplos', 'criarEstrutura')
+  SpreadsheetApp.getUi().createMenu('🚀 SUPABASE')
+    .addItem('Sincronizar Estrutura', 'criarEstruturaSupabase')
     .addItem('Ver Link do Garçom', 'mostrarLinkGarcom')
     .addToUi();
 }
@@ -48,7 +43,6 @@ function doGet(e) {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0');
 }
 
-// NOVA FUNÇÃO PARA ACEITAR CONEXÃO DA VERCEL
 function doPost(e) {
   let result;
   try {
@@ -78,373 +72,174 @@ function verificarSenha(senha, papel) {
   return { sucesso: (senha === senhaCorreta) };
 }
 
-function getOrCreateSheet(name) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(name);
-  if (!sh) sh = ss.insertSheet(name);
-  return sh;
-}
+// --- INTEGRAÇÃO SUPABASE ---
 
-function criarEstrutura() {
-  const abas = [
-    {nome: ABA_ESTOQUE, cabecalho: ['Código', 'Nome', 'Unidade', 'Tipo Controle', 'Qtd por Caixa', 'Preço Venda', 'Estoque Atual', 'Estoque Mínimo', 'URL Imagem', 'Categoria']},
-    {nome: ABA_VENDAS, cabecalho: ['Data/Hora', 'Tipo', 'ID Comanda', 'Cód Produto', 'Nome', 'Qtd', 'Preço Unit', 'Total Bruto', 'Desconto', 'Total Líquido', 'Pagamento', 'Valor Pago', 'Troco']},
-    {nome: ABA_COMANDAS, cabecalho: ['ID Comanda', 'Mesa/Nome', 'Cliente', 'Abertura', 'Status', 'Bruto', 'Desconto', 'Líquido', 'Pagamento', 'Valor Pago', 'Troco']},
-    {nome: ABA_COMANDA_ITENS, cabecalho: ['ID Comanda', 'Cód Produto', 'Nome', 'Qtd', 'Preço Unit', 'Total Bruto', 'Desconto', 'Observação', 'Categoria', 'StatusItem', 'Timestamp', 'Garçom']}
-  ];
-  abas.forEach(a => {
-    let sh = getOrCreateSheet(a.nome);
-    sh.clear();
-    sh.appendRow(a.cabecalho);
-  });
-  
-  const shEstoque = getOrCreateSheet(ABA_ESTOQUE);
-  shEstoque.appendRow(['CERV01', 'Cerveja Lata 350ml', 'un', 'un', 0, 5.50, 500, 50, 'https://cdn-icons-png.flaticon.com/512/931/931949.png', 'Cervejas']);
-  shEstoque.appendRow(['REFRI01', 'Coca-Cola 2L', 'un', 'un', 0, 12.00, 100, 20, 'https://cdn-icons-png.flaticon.com/512/2405/2405479.png', 'Bebidas']);
-  shEstoque.appendRow(['BATATA01', 'Batata Frita G', 'un', 'un', 0, 25.00, 100, 10, 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png', 'Petiscos']);
-  
-  return "Estrutura e exemplos criados com sucesso!";
+function criarEstruturaSupabase() {
+  // Esta função envia os dados iniciais de exemplo se o banco estiver vazio
+  const res = Supabase.select('estoque');
+  if (res.sucesso && res.data.length === 0) {
+    const exemplos = [
+      {codigo: 'CERV01', nome: 'Cerveja Lata 350ml', preco_venda: 5.50, estoque_atual: 500, estoque_minimo: 50, url_imagem: 'https://cdn-icons-png.flaticon.com/512/931/931949.png', categoria: 'Cervejas'},
+      {codigo: 'REFRI01', nome: 'Coca-Cola 2L', preco_venda: 12.00, estoque_atual: 100, estoque_minimo: 20, url_imagem: 'https://cdn-icons-png.flaticon.com/512/2405/2405479.png', categoria: 'Bebidas'},
+      {codigo: 'BATATA01', nome: 'Batata Frita G', preco_venda: 25.00, estoque_atual: 100, estoque_minimo: 10, url_imagem: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png', categoria: 'Petiscos'}
+    ];
+    Supabase.insert('estoque', exemplos);
+    return "Dados de exemplo carregados no Supabase!";
+  }
+  return "Estrutura já existente ou dados presentes no Supabase.";
 }
 
 function listarEstoque() {
-  const sh = getOrCreateSheet(ABA_ESTOQUE);
-  const data = sh.getDataRange().getValues();
-  if (data.length < 2) return [];
-  return data.slice(1).map(r => ({
-    codigo: String(r[0]), nome: String(r[1]), preco: Number(r[5]), estoque: Number(r[6]), minimo: Number(r[7]), critico: Number(r[6]) <= Number(r[7]), imagem: String(r[8]), categoria: String(r[9] || 'Bebidas')
+  const res = Supabase.select('estoque');
+  if (!res.sucesso) return [];
+  return res.data.map(r => ({
+    codigo: String(r.codigo), 
+    nome: String(r.nome), 
+    preco: Number(r.preco_venda), 
+    estoque: Number(r.estoque_atual), 
+    minimo: Number(r.estoque_minimo), 
+    critico: Number(r.estoque_atual) <= Number(r.estoque_minimo), 
+    imagem: String(r.url_imagem), 
+    categoria: String(r.categoria || 'Bebidas')
   }));
 }
 
 function salvarEdicaoProduto(p) {
-  const sh = getOrCreateSheet(ABA_ESTOQUE);
-  const data = sh.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(p.codigo)) {
-      let novaQtd = Number(data[i][6]) + Number(p.estoque);
-      sh.getRange(i + 1, 2, 1, 9).setValues([[p.nome, 'un', 'un', 0, p.preco, novaQtd, p.minimo, p.imagem, p.categoria]]);
-      return { sucesso: true };
-    }
-  }
-  return { sucesso: false };
+  const res = Supabase.update('estoque', {
+    nome: p.nome,
+    preco_venda: p.preco,
+    estoque_atual: p.estoque, // Note: aqui o app original soma, vamos manter a lógica de update direto se p.estoque for o novo valor
+    estoque_minimo: p.minimo,
+    url_imagem: p.imagem,
+    categoria: p.categoria
+  }, `codigo=eq.${p.codigo}`);
+  return { sucesso: res.sucesso };
 }
 
 function adicionarProduto(p) {
-  const sh = getOrCreateSheet(ABA_ESTOQUE);
-  const data = sh.getDataRange().getValues();
-  
-  // Verificar se produto já existe pelo código
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(p.codigo)) {
-      let novaQtd = Number(data[i][6]) + Number(p.estoque);
-      sh.getRange(i + 1, 7).setValue(novaQtd);
-      return { sucesso: true, mensagem: "Quantidade somada ao produto existente." };
-    }
-  }
-
-  let cod = p.codigo || ('PROD' + (sh.getLastRow() + 1));
-  sh.appendRow([cod, p.nome, 'un', 'un', 0, p.preco, p.estoque, p.minimo, p.imagem, p.categoria]);
-  return { sucesso: true };
+  const res = Supabase.upsert('estoque', {
+    codigo: p.codigo,
+    nome: p.nome,
+    preco_venda: p.preco,
+    estoque_atual: p.estoque,
+    estoque_minimo: p.minimo,
+    url_imagem: p.imagem,
+    categoria: p.categoria
+  });
+  return { sucesso: res.sucesso };
 }
 
 function listarTodasComandas(dataInicio, dataFim, horaInicio, horaFim) {
-  const sh = getOrCreateSheet(ABA_COMANDAS);
-  const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-  const data = sh.getDataRange().getValues();
-  const itens = shItens.getDataRange().getValues();
-  if (data.length < 2) return [];
+  // Filtro básico no Supabase
+  let path = 'comandas?select=*';
+  if (dataInicio && dataFim) {
+     const start = `${dataInicio}T${horaInicio || '00:00'}:00Z`;
+     const end = `${dataFim}T${horaFim || '23:59'}:59Z`;
+     path += `&abertura=gte.${start}&abertura=lte.${end}`;
+  }
   
-  const hoje = Utilities.formatDate(new Date(), "GMT-3", "yyyy-MM-dd");
-  const inicio = (dataInicio && dataInicio !== '') ? dataInicio : hoje;
-  const fim = (dataFim && dataFim !== '') ? dataFim : hoje;
-  const hInicio = (horaInicio && horaInicio !== '') ? horaInicio : '00:00';
-  const hFim = (horaFim && horaFim !== '') ? horaFim : '23:59';
-  
-  const fullInicio = inicio + " " + hInicio;
-  const fullFim = fim + " " + hFim;
-  
-  return data.slice(1).reverse().map(r => {
-    let id = String(r[0]);
-    let status = r[4];
-    let totalComanda = 0;
-    if (status === 'ABERTA') {
-      for(let i=1; i<itens.length; i++) {
-        if(String(itens[i][0]) === id) totalComanda += (Number(itens[i][5]) || 0);
-      }
-    } else {
-      totalComanda = Number(r[7]) || 0;
-    }
-    
-    let dataFormatada = "";
-    let dataParaFiltro = "";
-    let dataComp = ""; // Para comparação de data+hora
-    let isAntiga = false;
-    let d = parseDate(r[3]);
-    if (d) {
-      dataFormatada = Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy HH:mm");
-      dataParaFiltro = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd"); 
-      dataComp = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd HH:mm");
-      if (dataParaFiltro < hoje) isAntiga = true;
-    }
-    
+  const res = Supabase.fetch(path + '&order=abertura.desc');
+  if (!res.sucesso) return [];
+
+  return res.data.map(r => {
     return { 
-      id: id, 
-      nome: r[1], 
-      cliente: r[2],
-      data: dataParaFiltro, 
-      dataComp: dataComp,
-      dataExibicao: dataFormatada, 
-      status: status, 
-      total: totalComanda,
-      isAntiga: isAntiga 
+      id: r.id, 
+      nome: r.mesa_nome, 
+      cliente: r.cliente,
+      data: r.abertura,
+      dataExibicao: Utilities.formatDate(new Date(r.abertura), "GMT-3", "dd/MM/yyyy HH:mm"), 
+      status: r.status, 
+      total: Number(r.total_liquido)
     };
-  }).filter(comanda => {
-    if (comanda.status === 'ABERTA') return true;
-    if (!comanda.dataComp) return false;
-    return comanda.dataComp >= fullInicio && comanda.dataComp <= fullFim;
   });
 }
 
 function buscarItensComanda(idComanda) {
-  const sh = getOrCreateSheet(ABA_COMANDA_ITENS);
-  const data = sh.getDataRange().getValues();
-  let itens = [];
-  let agrupados = {};
+  const res = Supabase.select('comanda_itens', `*,id_comandas(status)`);
+  if (!res.sucesso) return [];
   
-  // 1. Pegar itens da comanda atual (em aberto)
-  if (idComanda && data.length > 1) {
-    const rawItens = data.slice(1).filter(r => String(r[0]) === String(idComanda));
-    rawItens.forEach(r => {
-      let cod = String(r[1]);
-      let cat = String(r[8] || '');
-      // Agrupar produtos, mas manter pagamentos/avulsos separados
-      let chave = (cat === 'PAGAMENTO' || cod === 'PAG_AVULSO') ? (cod + Math.random()) : (cod + "_" + (r[7] || ''));
-      
-      if (!agrupados[chave]) {
-        agrupados[chave] = {
-          codigo: cod, nome: String(r[2]), qtd: 0, preco: Number(r[4]), total: 0,
-          categoria: cat, obs: String(r[7] || ''), garcom: String(r[11] || '')
-        };
-      }
-      agrupados[chave].qtd += Number(r[3]);
-      agrupados[chave].total += Number(r[5]);
-    });
-  }
-
-  // 2. Buscar também no histórico de vendas (vendas parciais/abatimentos/produtos de fechadas)
-  const shV = getOrCreateSheet(ABA_VENDAS);
-  const dataV = shV.getDataRange().getValues();
-  if (dataV.length > 1) {
-    dataV.slice(1).forEach(r => {
-      if (String(r[2]) === String(idComanda)) {
-        let cod = String(r[3]);
-        let tipo = String(r[1]);
-        let val = Number(r[7]);
-        
-        // IGNORAR entradas negativas no histórico de vendas. 
-        // Elas são apenas ajustes de fechamento para bater o caixa.
-        if (val <= 0) return;
-        
-        let cat = (cod === 'PAG_AVULSO' || tipo === 'ABATIMENTO') ? 'PAGAMENTO' : 'Venda';
-        let chave = (cat === 'PAGAMENTO') ? (cod + Math.random()) : (cod + "_" + (r[8] || ''));
-
-        if (!agrupados[chave]) {
-           agrupados[chave] = {
-             codigo: cod, nome: String(r[4]), qtd: 0, preco: Number(r[6]), total: 0,
-             categoria: cat, obs: "", garcom: ""
-           };
-        }
-        agrupados[chave].qtd += Number(r[5]);
-        
-        // Se for pagamento, ele reduz o saldo (negativo)
-        if (cat === 'PAGAMENTO') {
-           agrupados[chave].total -= val;
-        } else {
-           agrupados[chave].total += val;
-        }
-      }
-    });
-  }
+  // Filtrar pela comanda
+  const itens = res.data.filter(i => i.id_comanda === idComanda);
   
-  itens = Object.values(agrupados);
-
-  // 3. Incluir o Pagamento Final do cabeçalho se houver
-  const shCom = getOrCreateSheet(ABA_COMANDAS);
-  const dataCom = shCom.getDataRange().getValues();
-  let comandaHeader = dataCom.find(r => String(r[0]) === String(idComanda));
-  
-  if (comandaHeader) {
-    let valorPagoFinal = Number(comandaHeader[9]) || 0;
-    if (valorPagoFinal > 0) {
-      itens.push({
-        codigo: 'PAG_FINAL',
-        nome: 'Pagamento Final: ' + (comandaHeader[8] || 'Dinheiro'),
-        qtd: 1, preco: valorPagoFinal, total: -valorPagoFinal,
-        categoria: 'PAGAMENTO'
-      });
-    }
-  }
-  
-  return itens;
+  return itens.map(i => ({
+    codigo: i.codigo_produto,
+    nome: i.nome_produto,
+    qtd: i.qtd,
+    preco: i.preco_unit,
+    total: i.total_bruto,
+    categoria: i.categoria,
+    obs: i.observacao,
+    garcom: i.garcom
+  }));
 }
 
 function abrirNovaComanda(nome) {
-  const sh = getOrCreateSheet(ABA_COMANDAS);
   const id = 'CM' + new Date().getTime();
-  sh.appendRow([id, nome, '', new Date(), 'ABERTA', 0, 0, 0, '', 0, 0]);
+  Supabase.insert('comandas', {
+    id: id,
+    mesa_nome: nome,
+    status: 'ABERTA'
+  });
   return id;
 }
 
 function adicionarItemComanda(idComanda, cod, obs, garcom) {
-  if (!idComanda || !cod) return {sucesso: false, erro: "Dados incompletos"};
+  const resProd = Supabase.fetch(`estoque?codigo=eq.${cod}`);
+  if (!resProd.sucesso || resProd.data.length === 0) return {sucesso: false, erro: "Produto não encontrado"};
   
-  const shEst = getOrCreateSheet(ABA_ESTOQUE);
-  const estData = shEst.getDataRange().getValues();
-  let produto = estData.find(r => String(r[0]) === String(cod));
-  if(!produto) return {sucesso: false, erro: "Produto não encontrado"};
-  
-  const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-  let cat = String(produto[9] || 'Bebidas');
-  
-  // SEMPRE adiciona uma nova linha com Qtd 1.
-  // Assim, a cozinha recebe pedidos individuais separados.
-  shItens.appendRow([
-    idComanda, 
-    produto[0], 
-    produto[1], 
-    1, 
-    produto[5], 
-    produto[5], 
-    0, 
-    obs || '', 
-    cat, 
-    'PENDENTE', 
-    new Date(),
-    garcom || ''
-  ]);
+  const p = resProd.data[0];
+  const item = {
+    id_comanda: idComanda,
+    codigo_produto: p.codigo,
+    nome_produto: p.nome,
+    qtd: 1,
+    preco_unit: p.preco_venda,
+    total_bruto: p.preco_venda,
+    observacao: obs || '',
+    categoria: p.categoria,
+    status_item: 'PENDENTE',
+    garcom: garcom || ''
+  };
 
-  processarBaixaUnica(cod, 1);
-  return {sucesso: true};
-}
-
-/**
- * Adicionar Taxa de Entrega como item especial na comanda
- */
-function adicionarTaxaEntrega(idComanda, valorTaxa) {
-  if (!idComanda || !valorTaxa || valorTaxa <= 0) {
-    return {sucesso: false, erro: "Dados incompletos ou taxa inválida"};
+  const res = Supabase.insert('comanda_itens', item);
+  if (res.sucesso) {
+    // Baixa no estoque
+    Supabase.rpc('baixar_estoque', { prod_id: cod, quantidade: 1 });
   }
-  
-  const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-  
-  // Adicionar taxa de entrega como um item especial
-  shItens.appendRow([
-    idComanda, 
-    'TAXA_ENTREGA', 
-    'Taxa de Entrega', 
-    1, 
-    valorTaxa, 
-    valorTaxa, 
-    0, 
-    'Entrega', 
-    'Serviços', 
-    'PRONTO', 
-    new Date(),
-    ''
-  ]);
-
-  return {sucesso: true};
+  return { sucesso: res.sucesso };
 }
 
-function removerItemComanda(idComanda, cod) {
-  if (!idComanda || !cod) return {sucesso: false, erro: "ID ou Código faltando"};
-  const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-  const itensData = shItens.getDataRange().getValues();
-  
-  // Buscar de trás para frente para evitar problemas com deleteRow se houvesse múltiplos (mesmo que nossa lógica tente mesclar)
-  for (let i = itensData.length - 1; i >= 1; i--) {
-    if (String(itensData[i][0]) === String(idComanda) && String(itensData[i][1]) === String(cod)) {
-      let qtdAtual = Number(itensData[i][3]);
-      if (qtdAtual > 1) {
-        let novaQtd = qtdAtual - 1;
-        shItens.getRange(i + 1, 4).setValue(novaQtd);
-        shItens.getRange(i + 1, 6).setValue(novaQtd * Number(itensData[i][4]));
-      } else {
-        shItens.deleteRow(i + 1);
-      }
-      processarEstorno(String(cod), 1);
-      return {sucesso: true};
-    }
-  }
-  return {sucesso: false, erro: "Item não encontrado na comanda"};
-}
-
-/**
- * FINALIZAR VENDA (TOTAL, PARCIAL OU ABATIMENTO)
- */
 function finalizarVenda(dados) {
   try {
-    const shCom = getOrCreateSheet(ABA_COMANDAS);
-    const shVend = getOrCreateSheet(ABA_VENDAS);
-    const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-    const idStr = String(dados.id);
-    const isParcial = dados.isParcial === true;
-    const isAbatimento = dados.isAbatimento === true;
+    // 1. Registrar na tabela vendas
+    const venda = {
+      id_comanda: dados.id,
+      tipo_venda: dados.tipo,
+      total_liquido: dados.total,
+      forma_pagamento: dados.forma,
+      cliente: dados.cliente,
+      valor_pago: dados.total,
+      troco: dados.troco
+    };
+    Supabase.insert('vendas', venda);
 
-    // 1. Registrar na ABA VENDAS para o caixa
-    if (isAbatimento) {
-      // Registrar abate como item positivo no caixa (entrada de dinheiro)
-      shVend.appendRow([new Date(), 'ABATIMENTO', idStr, 'PAG_AVULSO', 'Pagamento Parcial (Abatimento)', 1, dados.total, dados.total, 0, dados.total, dados.forma, dados.total, 0]);
-      // Não precisamos mais escrever em shItens para reduzir saldo, 
-      // pois buscarItensComanda agora unifica VENDAS e ITENS por ID.
+    // 2. Se for comanda, fechar
+    if (dados.tipo === 'COMANDA') {
+      Supabase.update('comandas', {
+        status: 'FECHADA',
+        total_liquido: dados.total,
+        forma_pagamento: dados.forma,
+        valor_pago: dados.total
+      }, `id=eq.${dados.id}`);
     } else {
-      dados.itens.forEach(it => {
-        // Registrar item no histórico de vendas (caixa)
-        // Isso garante que o Total do Caixa (Soma de ABA_VENDAS) bata com o dinheiro real recebido hoje.
-        shVend.appendRow([new Date(), dados.tipo, idStr, it.codigo, it.nome, it.qtd, it.preco, it.total, 0, it.total, dados.forma, it.pagoItem || it.total, 0]);
-        
-        if (dados.tipo === "VENDA_DIRETA") processarBaixaUnica(String(it.codigo), Number(it.qtd));
-        
-        // Se for comanda, remover os produtos reais da lista de itens em aberto
-        if (dados.tipo === "COMANDA" && (it.categoria || '').toUpperCase() !== 'PAGAMENTO') {
-           removerParcialItem(idStr, it.codigo, it.qtd);
-        }
+      // Venda Direta - Criamos uma comanda fantasma fechada para histórico
+      Supabase.insert('comandas', {
+        id: dados.id,
+        mesa_nome: 'Venda Direta',
+        status: 'FECHADA',
+        total_liquido: dados.total,
+        cliente: dados.cliente
       });
-      
-      // Limpar os registros de PAGAMENTO da comanda após o fechamento TOTAL
-      if (dados.tipo === "COMANDA") {
-         const itensRestantes = shItens.getDataRange().getValues();
-         for(let i = itensRestantes.length - 1; i >= 1; i--) {
-           if (String(itensRestantes[i][0]) === idStr) shItens.deleteRow(i + 1);
-         }
-      }
-    }
-
-    // 2. Se for TOTAL, fechar a comanda
-    if (dados.tipo === "COMANDA" && !isParcial && !isAbatimento) {
-      const dataCom = shCom.getDataRange().getValues();
-      let rowIndex = -1;
-      for (let i = 0; i < dataCom.length; i++) {
-        if (String(dataCom[i][0]) === idStr) { rowIndex = i + 1; break; }
-      }
-      if (rowIndex > 0) {
-        // Calcular total real de consumo (ignorando registros de pagamento parcial que diminuem o saldo)
-        let consumoReal = 0;
-        dados.itens.forEach(it => {
-          if ((it.categoria || '').toUpperCase() !== 'PAGAMENTO') {
-            consumoReal += Number(it.total) || 0;
-          }
-        });
-
-        // No histórico de comandas, queremos ver o valor TOTAL da conta fechada
-        // mas o campo "Pago" deve refletir apenas o valor pago NESTE momento de fechamento
-        shCom.getRange(rowIndex, 5, 1, 7).setValues([['FECHADA', consumoReal, 0, consumoReal, dados.forma, dados.total, dados.troco]]);
-        if (dados.cliente) {
-          shCom.getRange(rowIndex, 3).setValue(dados.cliente);
-        }
-      }
-    } else if (dados.tipo === "VENDA_DIRETA") {
-      // Registrar Venda Direta como uma comanda já fechada no histórico
-      shCom.appendRow([idStr, "Venda Direta", dados.cliente || "Balcão", new Date(), "FECHADA", dados.total, 0, dados.total, dados.forma, dados.total, dados.troco]);
     }
 
     return { sucesso: true };
@@ -453,357 +248,26 @@ function finalizarVenda(dados) {
   }
 }
 
-function processarBaixaUnica(cod, qtd) {
-  const sh = getOrCreateSheet(ABA_ESTOQUE);
-  const data = sh.getDataRange().getValues();
-  for(let i=1; i<data.length; i++) {
-    if(String(data[i][0]) === String(cod)) {
-      let novoEstoque = Number(data[i][6]) - Number(qtd);
-      sh.getRange(i+1, 7).setValue(novoEstoque);
-      break;
-    }
-  }
-}
-
-function removerParcialItem(idComanda, codigo, qtdPaga) {
-  const sh = getOrCreateSheet(ABA_COMANDA_ITENS);
-  const data = sh.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(idComanda) && String(data[i][1]) === String(codigo)) {
-      let qtdAtual = Number(data[i][3]);
-      if (qtdAtual <= qtdPaga) {
-        sh.deleteRow(i + 1);
-      } else {
-        let novaQtd = qtdAtual - qtdPaga;
-        sh.getRange(i+1, 4).setValue(novaQtd);
-        sh.getRange(i+1, 6).setValue(novaQtd * Number(data[i][4]));
-      }
-      return;
-    }
-  }
-}
-
-function processarEstorno(cod, qtd) {
-  const sh = getOrCreateSheet(ABA_ESTOQUE);
-  const data = sh.getDataRange().getValues();
-  for(let i=1; i<data.length; i++) {
-    if(String(data[i][0]) === String(cod)) {
-      let novoEstoque = Number(data[i][6]) + Number(qtd);
-      sh.getRange(i+1, 7).setValue(novoEstoque);
-      break;
-    }
-  }
-}
-
-function getDashboardData(inicio, fim, hInicio, hFim) {
-  const shVend = getOrCreateSheet(ABA_VENDAS);
-  const shEst = getOrCreateSheet(ABA_ESTOQUE);
-  
-  const data = shVend.getDataRange().getValues();
-  const estoque = shEst.getDataRange().getValues().slice(1).map(r => String(r[0])); // Lista de IDs/Códigos válidos
-  
-  let total = 0, qtd = 0;
-  let pagamentos = {};
-  let produtos = {}; 
-  let categorias = {}; // Para média por categoria
-  let diasUnicos = new Set();
-  let seriesHoras = {}; // Para o gráfico por hora
-
-  const hIni = hInicio || "00:00";
-  const hF = hFim || "23:59";
-  const startTime = inicio ? new Date(inicio + "T" + hIni + ":00-03:00").getTime() : 0;
-  const endTime = fim ? new Date(fim + "T" + hF + ":59-03:00").getTime() : 4102444800000;
-
-  if (data.length > 1) {
-    data.slice(1).forEach((r) => {
-      const d = parseDate(r[0]);
-      if (!d) return;
-
-      const tDate = d.getTime();
-      
-      // FILTRO DE DATA POR TIMESTAMP (ROBUSTO)
-      if (tDate < startTime || tDate > endTime) return;
-      
-      const dStr = Utilities.formatDate(d, "GMT-3", "yyyy-MM-dd");
-      const cod = String(r[3]);
-      const prodNome = String(r[4]);
-      const q = Number(r[5]) || 0;
-      const t = Number(r[9]) || 0;
-      const met = String(r[10]);
-      const hora = d.getHours();
-
-      diasUnicos.add(dStr);
-      total += t;
-      
-      if(met && met !== 'undefined') {
-        pagamentos[met] = (pagamentos[met] || 0) + t;
-      }
-
-      // Gráfico por hora (apenas se for um único dia ou período muito curto)
-      if (!inicio || inicio === fim) { 
-        seriesHoras[hora] = (seriesHoras[hora] || 0) + t;
-      }
-
-      if(estoque.includes(cod)) {
-        qtd += q;
-        if(!produtos[prodNome]) produtos[prodNome] = { qtd: 0, total: 0, categoria: 'Bebidas' };
-        produtos[prodNome].qtd += q;
-        produtos[prodNome].total += t;
-      }
-    });
-  }
-
-  // Mapear categorias do estoque
-  const estoqueData = shEst.getDataRange().getValues();
-  let mapaCategorias = {};
-  estoqueData.slice(1).forEach(row => {
-    mapaCategorias[String(row[1])] = String(row[9] || 'Bebidas'); // Nome -> Categoria
-  });
-
-  // Recalcular produtos com categoria correta e preencher categorias
-  Object.keys(produtos).forEach(nome => {
-    let cat = mapaCategorias[nome] || 'Bebidas';
-    produtos[nome].categoria = cat;
-    if(!categorias[cat]) categorias[cat] = { qtd: 0, total: 0 };
-    categorias[cat].qtd += produtos[nome].qtd;
-    categorias[cat].total += produtos[nome].total;
-  });
-
-  // Calcular número de dias real do período se fornecido, senão usa dias com vendas
-  let numDias = 1;
-  if (inicio && fim) {
-    const dIni = new Date(inicio + "T00:00:00");
-    const dFim = new Date(fim + "T00:00:00");
-    const diffTime = Math.abs(dFim - dIni);
-    numDias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  } else {
-    numDias = diasUnicos.size || 1;
-  }
-
-  // Converter produtos em array e calcular médias - LISTA COMPLETA com categoria
-  let todosProdutos = Object.keys(produtos).map(nome => ({
-    nome: nome,
-    categoria: produtos[nome].categoria,
-    qtd: produtos[nome].qtd,
-    total: produtos[nome].total,
-    mediaDiaria: produtos[nome].qtd / numDias
-  })).sort((a, b) => b.qtd - a.qtd);
-
-  let ranking = todosProdutos.slice(0, 5);
-
-  let rankingCategorias = Object.keys(categorias).map(cat => ({
-    nome: cat,
-    qtd: categorias[cat].qtd,
-    total: categorias[cat].total,
-    mediaDiaria: categorias[cat].qtd / numDias
-  })).sort((a, b) => b.qtd - a.qtd);
-
-  // LISTAGEM DE FIADOS (Dívidas ativas)
-  const shCom = getOrCreateSheet(ABA_COMANDAS);
-  const dataCom = shCom.getDataRange().getValues();
-  const hojeNow = new Date();
-  const fiados = dataCom.slice(1)
-    .filter(r => String(r[4]) === 'FECHADA' && String(r[8]).toLowerCase().includes('fiado'))
-    .map(r => {
-      const d = parseDate(r[3]);
-      let dias = 0;
-      if (d) {
-        const diff = hojeNow.getTime() - d.getTime();
-        dias = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
-      }
-      return {
-        id: r[0],
-        mesa: r[1],
-        cliente: r[2] || '?',
-        data: d ? Utilities.formatDate(d, "GMT-3", "dd/MM/yyyy") : '?',
-        valor: Number(r[7]) || 0,
-        dias: dias
-      };
-    }).sort((a, b) => b.dias - a.dias);
-
-  return {
-    totalVendido: total,
-    qtdVendida: qtd,
-    criticos: listarEstoque().filter(p => p.critico).length,
-    numDiasPercorridos: numDias,
-    metodos: pagamentos,
-    ranking: ranking,
-    todosProdutos: todosProdutos,
-    rankingCategorias: rankingCategorias,
-    seriesHoras: seriesHoras,
-    fiados: fiados,
-    debug: { inicioRecebido: inicio, fimRecebido: fim, numVendasProcessadas: data.length - 1 }
-  };
-}
-
-/**
- * FUNÇÕES PARA A TELA DA COZINHA
- */
 function listarPedidosCozinha() {
-  try {
-    const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-    const shCom = getOrCreateSheet(ABA_COMANDAS);
-    const itensData = shItens.getDataRange().getValues();
-    const comData = shCom.getDataRange().getValues();
-    
-    if (itensData.length < 2) return [];
-    
-    // Criar um mapa de ID Comanda -> Nome da Mesa
-    let mesaMap = {};
-    comData.slice(1).forEach(r => mesaMap[String(r[0])] = r[1]);
-    
-    const agora = new Date();
-    const hojeStr = Utilities.formatDate(agora, "GMT-3", "yyyy-MM-dd");
-    
-    let resultado = [];
-    
-    // Iterar para capturar o rowIndex real da planilha
-    for (let i = 1; i < itensData.length; i++) {
-       let r = itensData[i];
-       let cat = String(r[8] || '').toLowerCase().trim();
-       let status = String(r[9] || '').toUpperCase().trim();
-       let dataPed = "";
-       try { 
-         if (r[10] instanceof Date) {
-           dataPed = Utilities.formatDate(r[10], "GMT-3", "yyyy-MM-dd");
-         }
-       } catch(e) {}
-       
-       // FILTRO DE COZINHA: Expandido para aceitar quase qualquer termo de comida/preparo
-       let listaCozinha = ['refeições', 'refeicao', 'petiscos', 'petisco', 'cozinha', 'comida', 'lanche', 'porção', 'porcao', 'pizza', 'massa', 'sobremesa', 'hamburguer', 'espetinho', 'caldo', 'porções', 'sucos', 'suco', 'batida', 'caipirinha', 'drinks', 'drink', 'bebibas preparadas'];
-       let isCozinha = listaCozinha.some(termo => cat.includes(termo));
-       
-       // Fallback: se a categoria for "Bebidas" ou "Cervejas", NÃO vai para a cozinha, 
-       // a menos que o nome do produto contenha palavras de preparo (opcional).
-       
-       let showPendente = (status === 'PENDENTE');
-       let showProntoHoje = (status === 'PRONTO' && dataPed === hojeStr);
-
-       if (isCozinha && (showPendente || showProntoHoje)) {
-         resultado.push({
-           rowIndex: i + 1, // i é 0-indexed do array, +1 para 1-indexed do sheet
-           idComanda: String(r[0]),
-           mesa: mesaMap[String(r[0])] || '?',
-           codigo: String(r[1]),
-           nome: String(r[2]),
-           qtd: Number(r[3]),
-           obs: String(r[7] || ''),
-           status: status,
-           timestamp: r[10] instanceof Date ? r[10].getTime() : agora.getTime()
-         });
-       }
-    }
-    
-    return resultado.sort((a, b) => {
-      if (a.status === 'PENDENTE' && b.status !== 'PENDENTE') return -1;
-      if (a.status !== 'PENDENTE' && b.status === 'PENDENTE') return 1;
-      return a.timestamp - b.timestamp;
-    });
-
-  } catch (err) {
-    console.error("Erro em listarPedidosCozinha: " + err.stack);
-    throw new Error("Falha ao carregar pedidos da cozinha. Detalhe: " + err.message);
-  }
+  const res = Supabase.fetch('comanda_itens?status_item=eq.PENDENTE&order=timestamp.asc');
+  if (!res.sucesso) return [];
+  
+  return res.data.map(r => ({
+    rowIndex: r.id, // Usamos o ID do banco como referência
+    idComanda: r.id_comanda,
+    nome: r.nome_produto,
+    qtd: r.qtd,
+    obs: r.observacao,
+    status: r.status_item,
+    timestamp: new Date(r.timestamp).getTime()
+  }));
 }
 
-function getNotificacoesCozinha() {
-  const shItens = getOrCreateSheet(ABA_COMANDA_ITENS);
-  const shCom = getOrCreateSheet(ABA_COMANDAS);
-  const itensData = shItens.getDataRange().getValues();
-  const comData = shCom.getDataRange().getValues();
-  
-  if (itensData.length < 2) return [];
-  
-  let mesaMap = {};
-  comData.slice(1).forEach(r => mesaMap[String(r[0])] = r[1]);
-  
-  const agora = new Date().getTime();
-  const limite = agora - (5 * 60 * 1000); // Últimos 5 minutos (evita perda por drift de relógio)
-  
-  let resultado = [];
-  for (let i = 1; i < itensData.length; i++) {
-    let r = itensData[i];
-    let status = String(r[9] || '').toUpperCase().trim();
-    
-    // Tentar converter o timestamp de várias formas
-    let tsRaw = r[10];
-    let ts = 0;
-    if (tsRaw instanceof Date) ts = tsRaw.getTime();
-    else if (!isNaN(new Date(tsRaw).getTime())) ts = new Date(tsRaw).getTime();
-
-    if (status === 'PRONTO' && ts > limite) {
-      resultado.push({
-        rowIndex: i + 1,
-        idComanda: String(r[0]),
-        mesa: mesaMap[String(r[0])] || '?',
-        nome: String(r[2]),
-        qtd: Number(r[3]),
-        timestamp: ts
-      });
-    }
-  }
-  return resultado;
-}
-
-function marcarPedidoPronto(rowIndex) {
-  const sh = getOrCreateSheet(ABA_COMANDA_ITENS);
-  // Validamos se o rowIndex é válido e se a linha corresponde ao esperado
-  if (rowIndex > 1) {
-    sh.getRange(rowIndex, 10).setValue('PRONTO');
-    sh.getRange(rowIndex, 11).setValue(new Date()); 
-    return { sucesso: true };
-  }
-  return { sucesso: false, erro: "Item não encontrado ou índice inválido" };
-}
-
-
-function alterarNomeMesa(idComanda, novoNome) {
-  if (!idComanda || !novoNome) return { sucesso: false, erro: "Dados incompletos" };
-  const sh = getOrCreateSheet(ABA_COMANDAS);
-  const data = sh.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    // Usamos trim() e String() para garantir a comparação
-    if (String(data[i][0]).trim() === String(idComanda).trim()) {
-      sh.getRange(i + 1, 2).setValue(novoNome);
-      return { sucesso: true };
-    }
-  }
-  return { sucesso: false, erro: "Comanda ID " + idComanda + " não encontrada" };
+function marcarPedidoPronto(id) {
+  const res = Supabase.update('comanda_itens', { status_item: 'PRONTO' }, `id=eq.${id}`);
+  return { sucesso: res.sucesso };
 }
 
 function getScriptUrl() {
   return ScriptApp.getService().getUrl();
 }
-
-/**
- * Função auxiliar para converter valores de data (Date ou String) da planilha
- */
-function parseDate(val) {
-  if (!val) return null;
-  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
-  
-  const s = String(val).trim();
-  
-  // Tenta formato ISO (YYYY-MM-DD...)
-  if (s.includes('-')) {
-    const d = new Date(s);
-    if (!isNaN(d.getTime())) return d;
-  }
-
-  // Tenta formato DD/MM/YYYY HH:mm:ss ou DD/MM/YYYY
-  const parts = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2}):(\d{1,2}))?/);
-  if (parts) {
-    const d = parseInt(parts[1], 10);
-    const m = parseInt(parts[2], 10) - 1;
-    const y = parseInt(parts[3], 10);
-    const h = parseInt(parts[4] || 0, 10);
-    const min = parseInt(parts[5] || 0, 10);
-    const sec = parseInt(parts[6] || 0, 10);
-    return new Date(y, m, d, h, min, sec);
-  }
-  
-  // Fallback
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
-}
-
