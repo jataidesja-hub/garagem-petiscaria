@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo - Sistema Demonstrativo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="../../../../public/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sistema Demonstrativo">
+    <title>Dashboard - Sistema Demonstrativo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+    <!-- PORTAL DE ENTRADA -->
+    <div id="view-portal" class="portal-container">
+        <div class="portal-title">
+            <i class="fas fa-beer" style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem;"></i>
+            <h1>SISTEMA DEMONSTRATIVO</h1>
+            <p style="color: var(--text-muted)">Selecione o mÃ³dulo de acesso</p>
+        </div>
+        <div class="portal-grid">
+            <div class="portal-card" onclick="irParaLogin()">
+                <i class="fas fa-user-shield"></i>
+                <h3>Administrativo</h3>
+                <small style="color: var(--text-muted)">GestÃ£o, Estoque e RelatÃ³rios</small>
+            </div>
+            <div class="portal-card" onclick="irParaModulo('garcom')">
+                <i class="fas fa-user-tie"></i>
+                <h3>GarÃ§om</h3>
+                <small style="color: var(--text-muted)">LanÃ§amento de Pedidos</small>
+            </div>
+            <div class="portal-card" onclick="irParaModulo('cozinha')">
+                <i class="fas fa-utensils"></i>
+                <h3>Cozinha</h3>
+                <small style="color: var(--text-muted)">Painel de Preparo</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay de Login -->
+    <div id="login-overlay" style="display: none;">
+        <div class="login-box">
+            <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2>Acesso Admin</h2>
+            <p style="color: #888; margin-bottom: 20px;">Digite a senha de administrador.</p>
+            <input type="password" id="login-pass" placeholder="â€¢â€¢â€¢â€¢" maxlength="10">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="tentarLogin()" style="flex: 2;">ENTRAR</button>
+                <button onclick="voltarAoPortal()"
+                    style="flex: 1; background: var(--glass); color: white;">VOLTAR</button>
+            </div>
+            <p id="login-err" style="color: #ff4444; font-size: 0.8rem; margin-top: 15px; display: none;">Senha
+                incorreta.</p>
+        </div>
+    </div>
+
+    <!-- BotÃ£o de InstalaÃ§Ã£o PWA -->
+    <button id="install-button"><i class="fas fa-download"></i>Instalar App</button>
+
+    <!-- CONTEÃšDO PRINCIPAL (ADMIN) -->
+    <div id="view-admin" style="display: none;">
+        <div class="top-bar no-print">
+            <span><i class="fas fa-code"></i> Developed by: <b>J.A SOFTWARE & SOLUTION</b></span>
+            <span><i class="fab fa-whatsapp"></i> (87) 9 8143-6052</span>
+        </div>
+        <header>
+            <div class="brand">ðŸº SISTEMA <span>DEMONSTRATIVO</span></div>
+        </header>
+
+        <div class="nav-container no-print">
+            <div class="nav-item active" onclick="switchTab('tab-dash', this)">Dashboard</div>
+            <div class="nav-item" onclick="switchTab('tab-estoque', this)">Estoque</div>
+            <div class="nav-item" onclick="switchTab('tab-vd', this)">Venda Direta</div>
+            <div class="nav-item" onclick="voltarAoPortal()" style="color: var(--accent)"><i
+                    class="fas fa-sign-out-alt"></i> Sair</div>
+        </div>
+
+        <div class="container">
+            <!-- DASHBOARD -->
+            <div id="tab-dash" class="tab-content">
+                <div class="card" style="padding: 1rem 2rem; margin-bottom: 2rem;">
+                    <div style="display:flex; gap:15px; align-items:center; flex-wrap: wrap;">
+                        <div style="display:flex; align-items:center; gap:5px">
+                            <b>InÃ­cio:</b>
+                            <input type="date" id="dash-inicio" style="width:auto; margin:0" onchange="carregarDash()">
+                            <input type="time" id="dash-h-inicio" style="width:auto; margin:0" value="00:00"
+                                onchange="carregarDash()">
+                        </div>
+                        <div style="display:flex; align-items:center; gap:5px">
+                            <b>Fim:</b>
+                            <input type="date" id="dash-fim" style="width:auto; margin:0" onchange="carregarDash()">
+                            <input type="time" id="dash-h-fim" style="width:auto; margin:0" value="23:59"
+                                onchange="carregarDash()">
+                        </div>
+                        <button class="btn btn-outline" onclick="setFiltroHoje()">Hoje</button>
+                        <button class="btn btn-outline" onclick="setFiltroMes()">MÃªs Atual</button>
+                        <button class="btn btn-outline" onclick="limparFiltro()">Limpar</button>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <div class="stat-card">
+                        <small>Total Vendido</small>
+                        <div id="d-total" class="stat-value" style="color: var(--success);">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card">
+                        <small>Itens Vendidos</small>
+                        <div id="d-qtd" class="stat-value">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <small>Produtos CrÃ­ticos</small>
+                        <div id="d-criticos" class="stat-value" style="color: var(--warning);">0</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin:0">ðŸ“‹ Comandas & Vendas Recentes</h3>
+                        <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.8rem;"
+                            onclick="toggleComandas()">
+                            <span id="txt-toggle">Recolher</span> <i id="icon-toggle" class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                    <div id="container-comandas-hist">
+                        <div class="comanda-grid" id="lista-comandas-hist"></div>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <div class="card">
+                        <h3>ðŸ† Top 5 (MÃ©dia de Venda DiÃ¡ria)</h3>
+                        <table style="margin-top:1rem;" id="d-ranking"></table>
+
+                        <h3 style="margin-top:2rem;">ðŸ“‚ MÃ©dia de Produtos por Categoria</h3>
+                        <div id="d-ranking-cat" style="margin-top:1rem;"></div>
+                    </div>
+                    <div class="card">
+                        <h3>ðŸ’³ Vendas por Pagamento</h3>
+                        <div id="d-pagamentos" style="margin-top:1rem; display:flex; flex-direction:column; gap:10px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="card-fiados" style="display:none; margin-top: 2rem;">
+                    <div
+                        style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin:0">ðŸš© Controle de Fiados (DÃ­vidas Ativas)</h3>
+                        <span id="fiados-count"
+                            style="background: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">0</span>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width:100%; font-size: 0.9rem;">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Ref / Mesa</th>
+                                    <th align="right">Valor</th>
+                                    <th align="center">Tempo</th>
+                                    <th align="right">AÃ§Ãµes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-fiados"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ESTOQUE -->
+            <div id="tab-estoque" class="tab-content" style="display:none">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="margin: 0;">GestÃ£o de Estoque</h2>
+                        <button class="btn btn-primary" onclick="abrirNovoProduto()">+ Novo Produto</button>
+                    </div>
+                    <div id="lista-estoque" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <div id="tab-vd" class="tab-content" style="display:none">
+                <div class="card">
+                    <h3>âš¡ Venda RÃ¡pida (Direta)</h3>
+                    <div style="position: relative; margin-top: 1.5rem;">
+                        <input type="text" id="vd-busca" placeholder="ðŸ” Buscar produto..."
+                            oninput="buscarVD(this.value)" onfocus="buscarVD(this.value)">
+                        <div id="vd-drop"
+                            style="position: absolute; width: 100%; background: #1a1a2e; border-radius: 12px; border: 1px solid var(--glass); display: none; max-height: 250px; overflow-y: auto; z-index: 500;">
+                        </div>
+                    </div>
+
+                    <table id="vd-carrinho" style="margin-top: 1.5rem;">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Qtd</th>
+                                <th align="right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+                    <div
+                        style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end;">
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted);">Forma de Pagamento</label>
+                            <select id="vd-pagamento" style="margin-bottom:0" onchange="toggleVdCliente()">
+                                <option value="Dinheiro">ðŸ’µ Dinheiro</option>
+                                <option value="Pix">ðŸ“± Pix</option>
+                                <option value="DÃ©bito">ðŸ’³ DÃ©bito</option>
+                                <option value="CrÃ©dito">ðŸ’³ CrÃ©dito</option>
+                                <option value="Voucher">ðŸŽŸï¸ Voucher</option>
+                                <option value="Fiado">ðŸš© Fiado</option>
+                            </select>
+                        </div>
+                        <div id="vd-cliente-cont" style="display:none">
+                            <label style="font-size: 0.8rem; color: var(--text-muted);">Nome do Cliente (Fiado)</label>
+                            <input type="text" id="vd-cliente" placeholder="Quem estÃ¡ devendo?" style="margin-bottom:0">
+                        </div>
+
+                        <!-- OpÃ§Ã£o de Entrega -->
+                        <div
+                            style="grid-column: 1 / -1; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--glass);">
+                            <label
+                                style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 1rem; color: var(--text); margin-bottom: 0;">
+                                <input type="checkbox" id="vd-entrega" onchange="toggleVdEntrega()"
+                                    style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary);">
+                                <span style="font-weight: 600;">ðŸ›µ Ã‰ para entrega?</span>
+                            </label>
+                            <div id="vd-taxa-entrega-cont" style="display: none; margin-top: 10px;">
+                                <label style="font-size: 0.8rem; color: var(--text-muted);">Valor da Taxa de
+                                    Entrega</label>
+                                <input type="number" id="vd-taxa-entrega" step="0.01" value="0.00"
+                                    placeholder="Ex: 5.00"
+                                    style="margin-bottom: 0; font-size: 1.1rem; text-align: center;"
+                                    oninput="atualizarTotalVD()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 id="vd-total" style="color: var(--primary); margin-bottom: 0.5rem; text-align: right;">
+                                R$
+                                0,00</h2>
+                            <button class="btn btn-primary" style="width: 100%;" onclick="finalizarVD()">EFETUAR
+                                VENDA</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Fim container -->
+    </div> <!-- Fim view-admin -->
+
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <div id="loader" class="loader-overlay">
+        <div class="spinner"></div>
+        <p id="loader-text" style="margin-top:15px; font-weight:600;"></p>
+    </div>
+
+    <!-- Modal Visualizar Comanda -->
+    <div id="modalVisualizar" class="overlay">
+        <div class="modal-box">
+            <div id="print-area">
+                <div
+                    style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
+                    <h1 style="margin:0; font-size: 24px; text-transform: uppercase;">SISTEMA DEMONSTRATIVO</h1>
+                    <p style="margin:2px 0; font-size: 14px; font-weight: bold;">DEMONSTRATIVO & CERVEJARIA</p>
+                    <p
+                        style="margin:5px 0; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; font-size: 12px;">
+                        EXTRATO DE CONSUMO</p>
+                </div>
+                <h2 id="v-nome" style="margin-bottom: 1.5rem; text-align: center;">Mesa</h2>
+                <table id="v-itens" style="width: 100%; font-size: 12px; border-collapse: collapse;"></table>
+                <div style="margin-top: 1.5rem; text-align: right; border-top: 1px dashed #000; padding-top: 10px;">
+                    <h3 id="v-total" style="font-size: 1.5rem; color: #D4AF37;">Total: R$ 0,00</h3>
+                </div>
+                <div style="text-align:center; margin-top: 30px; border-top: 1px solid #000; padding-top: 10px;"
+                    class="print-only">
+                    <p style="font-size: 12px; font-weight: bold;">BOHEMIA PURO MALTE</p>
+                    <p style="font-size: 11px; margin-top: 5px;">Obrigado pela preferÃªncia!</p>
+                    <div
+                        style="margin-top: 15px; border-top: 1px dotted #000; padding-top: 5px; font-size: 9px; opacity: 0.8;">
+                        Developed by: J.A Software & Solution<br>
+                        (87) 9 8143-6052
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 2rem;" class="no-print">
+                <button class="btn btn-primary" style="flex: 1;" onclick="window.print()">ðŸ–¨ï¸ Imprimir Cupom</button>
+                <button class="btn btn-outline" onclick="fecharModais()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar/Novo Produto -->
+    <div id="modalEdit" class="overlay">
+        <div class="modal-box">
+            <h3 id="edit-title">ðŸ“ Editar Produto</h3>
+            <div style="margin-top: 1.5rem;">
+                <label>Nome do Produto</label>
+                <input type="text" id="edit-nome" placeholder="Ex: Cerveja Lata">
+
+                <label>Categoria</label>
+                <select id="edit-categoria">
+                    <option value="RefeiÃ§Ãµes">ðŸ½ï¸ RefeiÃ§Ãµes</option>
+                    <option value="Petiscos">ðŸŸ Petiscos</option>
+                    <option value="Bebidas">ðŸ¥¤ Bebidas</option>
+                    <option value="Cervejas">ðŸº Cervejas</option>
+                    <option value="Bebidas Quentes">ðŸ¥ƒ Bebidas Quentes</option>
+                    <option value="Outros">ðŸ“¦ Outros</option>
+                </select>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><label>PreÃ§o Venda</label><input type="number" id="edit-preco" step="0.01"></div>
+                    <div><label id="label-estoque">Aumentar Estoque em</label><input type="number" id="edit-estoque">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div><label>Estoque MÃ­nimo</label><input type="number" id="edit-minimo"></div>
+                    <div><label>ID / CÃ³digo</label><input type="text" id="edit-codigo" placeholder="Auto-gerado"></div>
+                </div>
+
+                <label>URL da Imagem</label>
+                <input type="text" id="edit-img" placeholder="https://...">
+
+                <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                    <button class="btn btn-primary" style="flex: 1;" onclick="salvarEdicao()">Salvar</button>
+                    <button class="btn btn-outline" onclick="fecharModais()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    
+<script src="admin.js"></script>
+</body>
+
+</html>
+
