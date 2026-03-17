@@ -1,27 +1,8 @@
 ﻿// CONFIGURAÃ‡ÃƒO VERCEL -> GOOGLE
-        const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
+        
 
         // POLYFILL GOOGLE SCRIPT RUN
-        (function () {
-            if (typeof google === 'undefined') window.google = {};
-            if (typeof google.script === 'undefined') google.script = {};
-            function createRunner(handlers) {
-                return new Proxy({}, {
-                    get: function (target, prop) {
-                        if (prop === 'withSuccessHandler') return (cb) => createRunner({ ...handlers, success: cb });
-                        if (prop === 'withFailureHandler') return (eb) => createRunner({ ...handlers, failure: eb });
-                        return function (...args) {
-                            fetch(URL_GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ function: prop, args: args }), redirect: 'follow' })
-                                .then(r => r.json()).then(res => {
-                                    if (res && res.sucesso === false && handlers.failure) handlers.failure({ message: res.erro || "Erro no servidor" });
-                                    else if (handlers.success) handlers.success(res);
-                                }).catch(err => { if (handlers.failure) handlers.failure(err); });
-                        };
-                    }
-                });
-            }
-            google.script.run = createRunner({ success: null, failure: null });
-        })();
+        
 
         let soundEnabled = false;
         let lastOrderCount = 0;
@@ -204,6 +185,7 @@
             console.log('PWA foi instalado');
             document.getElementById('install-button').style.display = 'none';
         });
+
 
 
 

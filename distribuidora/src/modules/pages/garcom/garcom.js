@@ -1,27 +1,8 @@
-// CONFIGURAÃ‡ÃƒO VERCEL -> GOOGLE
-        const URL_GAS = "https://script.google.com/macros/s/AKfycbyk58Cyx04GHujrrEFN8OP_n6VUVnWCR0URrWKtx5IZcLaEsqIk_VpPkvbxKZSbuZ0c/exec";
+﻿// CONFIGURAÃƒâ€¡ÃƒÆ’O VERCEL -> GOOGLE
+        
 
         // POLYFILL GOOGLE SCRIPT RUN
-        (function () {
-            if (typeof google === 'undefined') window.google = {};
-            if (typeof google.script === 'undefined') google.script = {};
-            function createRunner(handlers) {
-                return new Proxy({}, {
-                    get: function (target, prop) {
-                        if (prop === 'withSuccessHandler') return (cb) => createRunner({ ...handlers, success: cb });
-                        if (prop === 'withFailureHandler') return (eb) => createRunner({ ...handlers, failure: eb });
-                        return function (...args) {
-                            fetch(URL_GAS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ function: prop, args: args }), redirect: 'follow' })
-                                .then(r => r.json()).then(res => {
-                                    if (res && res.sucesso === false && handlers.failure) handlers.failure({ message: res.erro || "Erro no servidor" });
-                                    else if (handlers.success) handlers.success(res);
-                                }).catch(err => { if (handlers.failure) handlers.failure(err); });
-                        };
-                    }
-                });
-            }
-            google.script.run = createRunner({ success: null, failure: null });
-        })();
+        
 
         let idAtivo = null, totalAtual = 0, consumoTotal = 0, estoqueCache = [], itensSessao = [];
         let modoPagamento = 'TOTAL';
@@ -40,14 +21,14 @@
         window.onload = function () {
             iniciarApp();
 
-            // Solicitar permissÃ£o para notificaÃ§Ãµes do sistema
+            // Solicitar permissÃƒÂ£o para notificaÃƒÂ§ÃƒÂµes do sistema
             if ("Notification" in window) {
                 if (Notification.permission !== "granted" && Notification.permission !== "denied") {
                     Notification.requestPermission();
                 }
             }
 
-            // SincronizaÃ§Ã£o automÃ¡tica a cada 10 segundos
+            // SincronizaÃƒÂ§ÃƒÂ£o automÃƒÂ¡tica a cada 10 segundos
             setInterval(() => {
                 verificarNotificacoes();
                 if (document.getElementById('modalPagamento').style.display !== 'flex' &&
@@ -65,7 +46,7 @@
         };
 
         function iniciarApp() {
-            // Recuperar garÃ§om salvo
+            // Recuperar garÃƒÂ§om salvo
             const salvo = localStorage.getItem('garcom_ativo');
             if (salvo) document.getElementById('select-garcom').value = salvo;
 
@@ -76,7 +57,7 @@
 
         function salvarGarcom(v) {
             localStorage.setItem('garcom_ativo', v);
-            showToast("GarÃ§om: " + (v || "Nenhum"), "success");
+            showToast("GarÃƒÂ§om: " + (v || "Nenhum"), "success");
         }
 
         function setFiltroHojeGarcom() {
@@ -100,7 +81,7 @@
             const cont = document.getElementById('toast-container');
             const t = document.createElement('div');
             t.className = `toast toast-${type}`;
-            t.innerHTML = (type === 'success' ? 'âœ… ' : 'âŒ ') + msg;
+            t.innerHTML = (type === 'success' ? 'Ã¢Å“â€¦ ' : 'Ã¢ÂÅ’ ') + msg;
             cont.appendChild(t);
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
         }
@@ -155,8 +136,8 @@
 
             if (syncIcon) syncIcon.classList.add('fa-spin');
 
-            // SÓ mostra skeleton se a grade estiver vazia E não for background sync
-            // Isso evita que as mesas sumam enquanto carrega a atualização
+            // SÃ“ mostra skeleton se a grade estiver vazia E nÃ£o for background sync
+            // Isso evita que as mesas sumam enquanto carrega a atualizaÃ§Ã£o
             if (!isBackground && grid.innerHTML.trim() === "") {
                 grid.innerHTML = `
                     <div class="skeleton-card skeleton"></div>
@@ -279,12 +260,12 @@
                         })
                         .withFailureHandler(err => {
                             document.getElementById('loader').style.display = 'none';
-                            showToast("Erro de conexÃ£o", "error");
+                            showToast("Erro de conexÃƒÂ£o", "error");
                         })
                         .adicionarItemComanda(idAtivo, String(cod), obs, garcomAtivo);
                 };
             } else {
-                userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} Ã  mesa?`, () => {
+                userConfirm("Confirmar Pedido", `Deseja adicionar ${nomeProd} ÃƒÂ  mesa?`, () => {
                     const garcomAtivo = document.getElementById('select-garcom').value;
                     document.getElementById('search-prod').value = '';
                     mostrarCarregando("Adicionando...");
@@ -302,7 +283,7 @@
                         })
                         .withFailureHandler(err => {
                             document.getElementById('loader').style.display = 'none';
-                            showToast("Erro de conexÃ£o", "error");
+                            showToast("Erro de conexÃƒÂ£o", "error");
                         })
                         .adicionarItemComanda(idAtivo, String(cod), "", garcomAtivo);
                 });
@@ -311,7 +292,7 @@
 
         function abrirDetalhes(id, nome, status = 'ABERTA') {
             idAtivo = String(id); document.getElementById('view-nome').innerText = nome;
-            // Configurar botÃµes baseado no status
+            // Configurar botÃƒÂµes baseado no status
             const isFechada = status === 'FECHADA';
             document.getElementById('btn-pagar').style.display = isFechada ? 'none' : 'flex';
             document.getElementById('btn-reimprimir').style.display = 'flex';
@@ -319,7 +300,7 @@
             document.querySelector('.search-container').style.display = isFechada ? 'none' : 'block';
             document.querySelectorAll('.btn-del').forEach(b => b.style.display = isFechada ? 'none' : 'block');
 
-            // Limpar tabela e total antes de abrir para nÃ£o mostrar lixo de comanda anterior
+            // Limpar tabela e total antes de abrir para nÃƒÂ£o mostrar lixo de comanda anterior
             document.getElementById('tabela-itens').innerHTML = '<tr><td colspan="2" align="center">Carregando itens...</td></tr>';
             document.getElementById('view-total').innerText = 'R$ 0,00';
             document.getElementById('modalDetalhes').style.display = 'flex';
@@ -353,9 +334,9 @@
                     _consumo += sub;
                     return `<tr>
                         <td>
-                            <b>${i.nome}</b> ${i.garcom ? `<small style="font-size:0.6rem; background:rgba(212,175,55,0.1); padding:2px 5px; border-radius:5px; color:var(--primary)">ðŸ‘¤ ${i.garcom}</small>` : ''}<br>
+                            <b>${i.nome}</b> ${i.garcom ? `<small style="font-size:0.6rem; background:rgba(212,175,55,0.1); padding:2px 5px; border-radius:5px; color:var(--primary)">Ã°Å¸â€˜Â¤ ${i.garcom}</small>` : ''}<br>
                             <small>${i.qtd}x R$ ${i.preco.toFixed(2)}</small>
-                            ${i.obs ? `<br><small style="color:var(--primary); font-style:italic">ðŸ“ ${i.obs}</small>` : ''}
+                            ${i.obs ? `<br><small style="color:var(--primary); font-style:italic">Ã°Å¸â€œÂ ${i.obs}</small>` : ''}
                         </td>
                         <td align="right">
                             <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end">
@@ -363,9 +344,9 @@
                                 ${!isFechada ? `
                                     <div style="display:flex; gap:2px">
                                         <button class="btn-del" onclick="removerItem('${i.codigo}')${isBackground ? ', true' : ''}" 
-                                                style="padding: 2px 8px; font-size: 0.7rem; background:rgba(255,0,0,0.1)">âž–</button>
+                                                style="padding: 2px 8px; font-size: 0.7rem; background:rgba(255,0,0,0.1)">Ã¢Å¾â€“</button>
                                         <button class="btn-del" onclick="adicionarMais('${i.codigo}')${isBackground ? ', true' : ''}" 
-                                                style="padding: 2px 8px; font-size: 0.7rem; background:rgba(0,255,0,0.1); color:var(--success); border-color:var(--success)">âž•</button>
+                                                style="padding: 2px 8px; font-size: 0.7rem; background:rgba(0,255,0,0.1); color:var(--success); border-color:var(--success)">Ã¢Å¾â€¢</button>
                                     </div>
                                 ` : ''}
                             </div>
@@ -374,7 +355,7 @@
                 }).join('');
 
                 if (pagamentos.length > 0) {
-                    html += `<tr><td colspan="2" style="padding-top:15px; border-bottom:1px solid var(--primary); color:var(--primary); font-size:0.8rem; font-weight:700">PAGAMENTOS JÃ REALIZADOS</td></tr>`;
+                    html += `<tr><td colspan="2" style="padding-top:15px; border-bottom:1px solid var(--primary); color:var(--primary); font-size:0.8rem; font-weight:700">PAGAMENTOS JÃƒÂ REALIZADOS</td></tr>`;
                     let pgsVistos = new Set();
                     pagamentos.forEach(p => {
                         let v = Math.abs(p.total);
@@ -419,7 +400,7 @@
                 return;
             }
 
-            // Alerta de depuraÃ§Ã£o (Remover depois de funcionar)
+            // Alerta de depuraÃƒÂ§ÃƒÂ£o (Remover depois de funcionar)
             console.log("Tentando alterar ID:", idAtivo, "para:", novoNome);
 
             mostrarCarregando("Atualizando...");
@@ -438,7 +419,7 @@
                 })
                 .withFailureHandler(err => {
                     document.getElementById('loader').style.display = 'none';
-                    showToast("Falha CrÃ­tica de ConexÃ£o", "error");
+                    showToast("Falha CrÃƒÂ­tica de ConexÃƒÂ£o", "error");
                     console.error(err);
                 })
                 .alterarNomeMesa(idAtivo, novoNome);
@@ -458,10 +439,10 @@
         function reimprimirCupom() {
             let dados = {
                 id: idAtivo,
-                // Usamos o total que jÃ¡ estÃ¡ na tela ou buscamos dos itens
+                // Usamos o total que jÃƒÂ¡ estÃƒÂ¡ na tela ou buscamos dos itens
                 total: totalAtual,
                 itens: itensSessao,
-                forma: "ConferÃªncia",
+                forma: "ConferÃƒÂªncia",
                 isParcial: false,
                 isAbatimento: false,
                 isPrevia: true
@@ -508,7 +489,7 @@
             let pago = parseFloat(document.getElementById('pag-valor').value) || 0;
             document.getElementById('pag-troco').innerText = 'R$ ' + (pago > t ? (pago - t).toFixed(2) : '0.00');
 
-            // Dinamizar texto do botÃ£o
+            // Dinamizar texto do botÃƒÂ£o
             const btn = document.getElementById('btn-finalizar-modal');
             if (modoPagamento === 'ABATIMENTO') {
                 if (t >= totalAtual && totalAtual > 0) {
@@ -538,7 +519,7 @@
 
         function finalizarFinal() {
             let valPagar = parseFloat(document.getElementById('pag-total-l').innerText.replace('R$ ', ''));
-            if (valPagar <= 0) return showToast("Valor invÃ¡lido", "error");
+            if (valPagar <= 0) return showToast("Valor invÃƒÂ¡lido", "error");
 
             let itensPagar = [];
             if (modoPagamento === 'TOTAL') itensPagar = itensSessao;
@@ -561,7 +542,7 @@
             mostrarCarregando("Finalizando...");
             google.script.run.withSuccessHandler(res => {
                 if (res.sucesso) {
-                    mostrarFinalizado("Venda ConcluÃ­da!", () => {
+                    mostrarFinalizado("Venda ConcluÃƒÂ­da!", () => {
                         if (isFullPayment) {
                             prepararCupom(dados);
                             fecharModais();
@@ -586,7 +567,7 @@
             document.getElementById('cupom-mesa').innerText = mesa;
             document.getElementById('cupom-data-hora').innerText = new Date().toLocaleString('pt-BR', { timeZone: 'America/Bahia' });
 
-            // 1. Filtrar Produtos (Somente positivos e nÃ£o relacionados a pagamento)
+            // 1. Filtrar Produtos (Somente positivos e nÃƒÂ£o relacionados a pagamento)
             let produtos = dados.itens.filter(i => {
                 let cat = (i.category || i.categoria || i.cat || '').toUpperCase();
                 let nome = (i.nome || '').toUpperCase();
@@ -630,7 +611,7 @@
 
             document.getElementById('cupom-itens').innerHTML = htmlItens;
 
-            // RodapÃ©: Total Conta - Pagamentos = Saldo
+            // RodapÃƒÂ©: Total Conta - Pagamentos = Saldo
             let totalPagoGeral = totalPagoAnterior + (dados.isAbatimento ? dados.total : (dados.isParcial ? dados.total : 0));
             if (!dados.isParcial && !dados.isAbatimento && !dados.isPrevia) totalPagoGeral = totalConsumo;
 
@@ -644,7 +625,7 @@
             document.getElementById('cupom-total').innerHTML = htmlTotal;
             document.getElementById('cupom-forma').innerText = (pagamentosAnteriores.length > 0 && !dados.isParcial) ? "Misto / Final: " + dados.forma : dados.forma;
 
-            const tituloModal = dados.isPrevia ? "ConferÃªncia de Mesa" : "Venda ConcluÃ­da";
+            const tituloModal = dados.isPrevia ? "ConferÃƒÂªncia de Mesa" : "Venda ConcluÃƒÂ­da";
             userConfirm(tituloModal, "Deseja imprimir o cupom agora?", () => window.print());
         }
 
@@ -666,13 +647,13 @@
                     if (!notificacoesJaVistas.has(key)) {
                         notificacoesJaVistas.add(key);
 
-                        const msg = `ðŸ½ï¸ PRONTO: ${n.qtd}x ${n.nome} para a mesa ${n.mesa}`;
+                        const msg = `Ã°Å¸ÂÂ½Ã¯Â¸Â PRONTO: ${n.qtd}x ${n.nome} para a mesa ${n.mesa}`;
                         showToast(msg, "success");
                         executarSomNotificacao();
 
-                        // NotificaÃ§Ã£o de Sistema (Barra de NotificaÃ§Ã£o)
+                        // NotificaÃƒÂ§ÃƒÂ£o de Sistema (Barra de NotificaÃƒÂ§ÃƒÂ£o)
                         if ("Notification" in window && Notification.permission === "granted") {
-                            new Notification("Pedido Pronto! ðŸš€", {
+                            new Notification("Pedido Pronto! Ã°Å¸Å¡â‚¬", {
                                 body: msg,
                                 icon: "https://cdn-icons-png.flaticon.com/512/4862/4862562.png"
                             });
@@ -680,7 +661,7 @@
                     }
                 });
             })
-                .withFailureHandler(err => console.error("Erro ao buscar notificaÃ§Ãµes:", err))
+                .withFailureHandler(err => console.error("Erro ao buscar notificaÃƒÂ§ÃƒÂµes:", err))
                 .getNotificacoesCozinha();
         }
 
@@ -689,12 +670,12 @@
             audioPronto.play().catch(e => console.log("Som bloqueado: ", e));
         }
 
-        // FunÃ§Ã£o para desbloquear Ã¡udio em navegadores mobile
+        // FunÃƒÂ§ÃƒÂ£o para desbloquear ÃƒÂ¡udio em navegadores mobile
         function desbloquearAudio() {
             audioPronto.play().then(() => {
                 audioPronto.pause();
                 audioPronto.currentTime = 0;
-            }).catch(e => console.log("Aguardando interaÃ§Ã£o para Ã¡udio"));
+            }).catch(e => console.log("Aguardando interaÃƒÂ§ÃƒÂ£o para ÃƒÂ¡udio"));
         }
 
         function confirmarNova() {
@@ -714,7 +695,7 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Mostrar o botÃ£o de instalaÃ§Ã£o
+            // Mostrar o botÃƒÂ£o de instalaÃƒÂ§ÃƒÂ£o
             document.getElementById('install-button').style.display = 'block';
         });
 
@@ -723,26 +704,27 @@
                 // Fallback para iOS
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
-                    alert("No iPhone/iPad:\n1. Toque no Ã­cone de Compartilhar (quadrado com seta)\n2. Role para baixo e selecione 'Adicionar Ã  Tela de InÃ­cio'");
+                    alert("No iPhone/iPad:\n1. Toque no ÃƒÂ­cone de Compartilhar (quadrado com seta)\n2. Role para baixo e selecione 'Adicionar ÃƒÂ  Tela de InÃƒÂ­cio'");
                 }
                 return;
             }
-            // Mostrar o prompt de instalaÃ§Ã£o
+            // Mostrar o prompt de instalaÃƒÂ§ÃƒÂ£o
             deferredPrompt.prompt();
-            // Aguardar a escolha do usuÃ¡rio
+            // Aguardar a escolha do usuÃƒÂ¡rio
             const { outcome } = await deferredPrompt.userChoice;
             console.log(`User response to the install prompt: ${outcome}`);
             // Limpar o prompt
             deferredPrompt = null;
-            // Esconder o botÃ£o apÃ³s a instalaÃ§Ã£o
+            // Esconder o botÃƒÂ£o apÃƒÂ³s a instalaÃƒÂ§ÃƒÂ£o
             document.getElementById('install-button').style.display = 'none';
         });
 
-        // Esconder o botÃ£o se o app jÃ¡ estiver instalado
+        // Esconder o botÃƒÂ£o se o app jÃƒÂ¡ estiver instalado
         window.addEventListener('appinstalled', () => {
             console.log('PWA foi instalado');
             document.getElementById('install-button').style.display = 'none';
         });
+
 
 
 
