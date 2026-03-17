@@ -18,7 +18,7 @@ const SupabaseClient = {
 
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.message || "Erro na requisição ao Supabase");
+            throw new Error(err.message || "Erro na requisiÃ§Ã£o ao Supabase");
         }
 
         if (options.method === 'DELETE' || res.status === 204) return { sucesso: true };
@@ -41,6 +41,14 @@ const SupabaseClient = {
     async update(table, data, matchQuery) {
         return this.fetch(`${table}?${matchQuery}`, {
             method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+    },
+
+    async upsert(table, data) {
+        return this.fetch(table, {
+            method: 'POST',
+            headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
             body: JSON.stringify(data)
         });
     },
@@ -72,7 +80,7 @@ window.google = {
             },
 
             listarEstoque(...args) { this._exec('listarEstoque', ...args); },
-            listarTodasComandas(...args) { this._exec('listarTodasComandas', ...args); },
+            listarTodasComandas(...args) { this._exec._bind(this)('listarTodasComandas', ...args); }, // Fix context binding if needed
             buscarItensComanda(...args) { this._exec('buscarItensComanda', ...args); },
             abrirNovaComanda(...args) { this._exec('abrirNovaComanda', ...args); },
             adicionarItemComanda(...args) { this._exec('adicionarItemComanda', ...args); },
@@ -81,10 +89,28 @@ window.google = {
             listarPedidosCozinha(...args) { this._exec('listarPedidosCozinha', ...args); },
             marcarPedidoPronto(...args) { this._exec('marcarPedidoPronto', ...args); },
             alterarNomeMesa(...args) { this._exec('alterarNomeMesa', ...args); },
-            getNotificacoesCozinha(...args) { this._exec('getNotificacoesCozinha', ...args); }
+            getNotificacoesCozinha(...args) { this._exec('getNotificacoesCozinha', ...args); },
+            adicionarProduto(...args) { this._exec('adicionarProduto', ...args); },
+            salvarEdicaoProduto(...args) { this._exec('salvarEdicaoProduto', ...args); }
         }
     }
 };
+
+// Corrigindo o binding do _exec para nÃ£o perder o context do handlers
+window.google.script.run.listarEstoque = window.google.script.run.listarEstoque.bind(window.google.script.run);
+window.google.script.run.listarTodasComandas = window.google.script.run.listarTodasComandas.bind(window.google.script.run);
+window.google.script.run.buscarItensComanda = window.google.script.run.buscarItensComanda.bind(window.google.script.run);
+window.google.script.run.abrirNovaComanda = window.google.script.run.abrirNovaComanda.bind(window.google.script.run);
+window.google.script.run.adicionarItemComanda = window.google.script.run.adicionarItemComanda.bind(window.google.script.run);
+window.google.script.run.removerItemComanda = window.google.script.run.removerItemComanda.bind(window.google.script.run);
+window.google.script.run.finalizarVenda = window.google.script.run.finalizarVenda.bind(window.google.script.run);
+window.google.script.run.listarPedidosCozinha = window.google.script.run.listarPedidosCozinha.bind(window.google.script.run);
+window.google.script.run.marcarPedidoPronto = window.google.script.run.marcarPedidoPronto.bind(window.google.script.run);
+window.google.script.run.alterarNomeMesa = window.google.script.run.alterarNomeMesa.bind(window.google.script.run);
+window.google.script.run.getNotificacoesCozinha = window.google.script.run.getNotificacoesCozinha.bind(window.google.script.run);
+window.google.script.run.adicionarProduto = window.google.script.run.adicionarProduto.bind(window.google.script.run);
+window.google.script.run.salvarEdicaoProduto = window.google.script.run.salvarEdicaoProduto.bind(window.google.script.run);
+
 
 const SupabaseAPI = {
     async listarEstoque() {
@@ -99,6 +125,31 @@ const SupabaseAPI = {
             imagem: String(r.url_imagem),
             categoria: String(r.categoria || 'Bebidas')
         }));
+    },
+
+    async adicionarProduto(p) {
+        const res = await SupabaseClient.upsert('estoque', {
+            codigo: p.codigo,
+            nome: p.nome,
+            preco_venda: p.preco,
+            estoque_atual: p.estoque,
+            estoque_minimo: p.minimo,
+            url_imagem: p.imagem,
+            categoria: p.categoria
+        });
+        return { sucesso: res.sucesso };
+    },
+
+    async salvarEdicaoProduto(p) {
+        const res = await SupabaseClient.update('estoque', {
+            nome: p.nome,
+            preco_venda: p.preco,
+            estoque_atual: p.estoque,
+            estoque_minimo: p.minimo,
+            url_imagem: p.imagem,
+            categoria: p.categoria
+        }, `codigo=eq.${p.codigo}`);
+        return { sucesso: res.sucesso };
     },
 
     async listarTodasComandas(dataInicio, dataFim, horaInicio, horaFim) {
@@ -183,7 +234,6 @@ const SupabaseAPI = {
     },
 
     async removerItemComanda(idComanda, cod) {
-        // Lógica simplificada: deleta UM item que combine com o código na comanda
         const res = await SupabaseClient.fetch(`comanda_itens?id_comanda=eq.${idComanda}&codigo_produto=eq.${cod}&limit=1&select=id`);
         if (res.data.length > 0) {
             await SupabaseClient.fetch(`comanda_itens?id=eq.${res.data[0].id}`, { method: 'DELETE' });
@@ -220,5 +270,10 @@ const SupabaseAPI = {
             mesa: r.comandas ? r.comandas.mesa_nome : 'Desconhecida',
             timestamp: new Date(r.timestamp).getTime()
         }));
+    },
+
+    async alterarNomeMesa(id, novoNome) {
+        const res = await SupabaseClient.update('comandas', { mesa_nome: novoNome }, `id=eq.${id}`);
+        return { sucesso: res.sucesso };
     }
 };
