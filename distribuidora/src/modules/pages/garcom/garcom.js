@@ -55,7 +55,7 @@
                     document.getElementById('wrapper-search').style.display !== 'block') {
                     carregarComandas(true);
                 }
-            }, 10000);
+            }, 30000);
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js')
@@ -742,5 +742,6 @@
             console.log('PWA foi instalado');
             document.getElementById('install-button').style.display = 'none';
         });
+
 
 

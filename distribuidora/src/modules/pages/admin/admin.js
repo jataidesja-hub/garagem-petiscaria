@@ -63,7 +63,7 @@
                 lista.forEach(n => {
                     let chave = n.idComanda + n.nome + n.qtd;
                     if (!notificacoesVistas.has(chave)) {
-                        showToast(`ðŸ³ PRONTO: ${n.nome} (${n.qtd}x) - Mesa: ${n.mesa}`, "ready", 30000);
+                        showToast(`ðŸ³ PRONTO: ${n.nome} (${n.qtd}x) - Mesa: ${n.mesa}`, "ready", 60000);
                         notificacoesVistas.add(chave);
                     }
                 });
@@ -71,12 +71,12 @@
         }
 
         // Iniciar polling de notificaÃ§Ãµes a cada 10 segundos e Dashboard a cada 30 segundos
-        setInterval(checarNotificacoes, 10000);
+        setInterval(checarNotificacoes, 60000);
         setInterval(() => {
             if (document.getElementById('tab-dash').style.display !== 'none') {
                 carregarDash();
             }
-        }, 30000);
+        }, 60000);
 
         function carregarDash() {
             const inicio = document.getElementById('dash-inicio').value;
@@ -686,5 +686,6 @@
         function atualizarTotalVD() {
             renderVD();
         }
+
 
 
